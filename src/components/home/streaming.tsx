@@ -35,13 +35,13 @@ export function Streaming() {
           {doubled.map((poster, index) => (
             <figure
               key={`${poster.alt}-${index}`}
-              className="group relative aspect-[2/3] w-52 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-2xl sm:w-64 lg:w-72"
+              className="group relative aspect-[2/3] w-[60vw] shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-2xl sm:w-[36vw] md:w-[28vw] lg:w-[22vw] xl:w-[384px]"
             >
               <Image
                 src={poster.image}
                 alt={poster.alt}
                 fill
-                sizes="(min-width: 1024px) 288px, (min-width: 640px) 256px, 208px"
+                sizes="(min-width: 1280px) 384px, (min-width: 1024px) 22vw, (min-width: 640px) 36vw, 60vw"
                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
