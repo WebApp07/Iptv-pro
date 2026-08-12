@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Inter, Oswald, Poppins, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { siteConfig } from "@/config/site";
 
@@ -11,6 +11,17 @@ const inter = Inter({
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-display",
   subsets: ["latin"],
+});
+
+const oswald = Oswald({
+  variable: "--font-heading",
+  subsets: ["latin"],
+});
+
+const poppins = Poppins({
+  variable: "--font-btn",
+  subsets: ["latin"],
+  weight: ["600"],
 });
 
 export const metadata: Metadata = {
@@ -46,7 +57,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body
+      className={`antialiased ${inter.variable} ${spaceGrotesk.variable} ${oswald.variable} ${poppins.variable}`}
+    >
+      {children}
+    </body>
     </html>
   );
 }
