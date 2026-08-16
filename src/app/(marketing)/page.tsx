@@ -2,6 +2,7 @@ import { Hero } from "@/components/home/hero";
 import { Streaming } from "@/components/home/streaming";
 import { Sports } from "@/components/home/sports";
 import { HowItWorks } from "@/components/home/how-it-works";
+import { WhyChooseUs } from "@/components/home/why-choose-us";
 import { PricingTeaser } from "@/components/home/pricing-teaser";
 import { Testimonials } from "@/components/home/testimonials";
 import { Faq } from "@/components/home/faq";
@@ -14,6 +15,7 @@ export default function HomePage() {
       <Streaming />
       <Sports />
       <HowItWorks />
+      <WhyChooseUs />
       <PricingTeaser />
       <Testimonials />
       <Faq />
