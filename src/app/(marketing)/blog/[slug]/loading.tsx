@@ -1,9 +1,9 @@
 export default function PostLoading() {
   return (
-    <div className="mx-auto max-w-3xl px-4 pt-14 sm:px-6 lg:px-8">
-      <div className="h-4 w-28 animate-pulse rounded bg-border" />
-      <div className="mt-6 h-6 w-24 animate-pulse rounded-full bg-border" />
-      <div className="mt-4 space-y-3">
+    <div className="mx-auto max-w-3xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
+      <div className="h-4 w-64 animate-pulse rounded bg-border" />
+      <div className="mt-8 h-6 w-24 animate-pulse rounded-full bg-card" />
+      <div className="mt-5 space-y-3">
         <div className="h-10 w-full animate-pulse rounded bg-card sm:h-14" />
         <div className="h-10 w-4/5 animate-pulse rounded bg-card sm:h-14" />
       </div>

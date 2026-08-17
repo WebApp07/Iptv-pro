@@ -23,13 +23,14 @@ export async function LatestFromBlog() {
   }
 
   return (
-    <section className="relative py-24">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden py-24">
+      <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-64 max-w-3xl rounded-full bg-[#ffd166]/10 blur-[120px]" />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <Badge
               variant="outline"
-              className="border-primary/40 bg-primary/10 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary"
+              className="border-[#ffd166]/40 bg-[#ffd166]/10 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#ffd166]"
             >
               Latest from the blog
             </Badge>
@@ -43,9 +44,12 @@ export async function LatestFromBlog() {
           </div>
           <Link
             href="/blog"
-            className="shrink-0 text-sm font-medium text-primary hover:underline"
+            className="group shrink-0 text-sm font-medium text-[#ffd166] transition-colors hover:text-[#f4c255]"
           >
-            View all articles →
+            View all articles
+            <span className="ml-1 inline-block transition-transform duration-300 group-hover:translate-x-1">
+              →
+            </span>
           </Link>
         </div>
 

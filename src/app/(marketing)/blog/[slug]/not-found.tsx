@@ -5,21 +5,32 @@ import { cn } from "@/lib/utils";
 export default function PostNotFound() {
   return (
     <section className="mx-auto flex max-w-7xl flex-col items-center px-4 py-28 text-center sm:px-6 lg:px-8">
-      <p className="text-sm font-medium text-primary">404</p>
-      <h1 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#ffd166]">
+        404
+      </p>
+      <h1 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
         Article not found
       </h1>
       <p className="mt-3 max-w-md text-muted">
         This article doesn&apos;t exist, or it has been moved. The blog is the
         best place to find what you&apos;re looking for.
       </p>
-      <div className="mt-8 flex gap-3">
-        <Link href="/blog" className={cn(buttonVariants({ size: "lg" }))}>
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <Link
+          href="/blog"
+          className={cn(
+            buttonVariants({ size: "lg" }),
+            "bg-[#ffd166] font-btn font-semibold text-black shadow-[0_12px_48px_-12px] shadow-[#ffd166]/60 hover:bg-[#f4c255]"
+          )}
+        >
           Browse the blog
         </Link>
         <Link
           href="/"
-          className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "lg" }),
+            "border-white/20 bg-white/5 text-white backdrop-blur hover:bg-white/10"
+          )}
         >
           Back to home
         </Link>

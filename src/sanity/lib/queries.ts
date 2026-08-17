@@ -57,9 +57,17 @@ const postProjection = groq`{
 
 const POSTS_QUERY = groq`*[_type == "post" && status == "published" && defined(slug.current)] | order(publishedAt desc) ${postsProjection}`;
 
+const POSTS_PAGE_QUERY = groq`*[_type == "post" && status == "published" && defined(slug.current)] | order(publishedAt desc)[$offset...$limit] ${postsProjection}`;
+
+const POSTS_COUNT_QUERY = groq`count(*[_type == "post" && status == "published" && defined(slug.current)])`;
+
 const LATEST_POSTS_QUERY = groq`*[_type == "post" && status == "published" && defined(slug.current)] | order(publishedAt desc)[0...$limit] ${postsProjection}`;
 
 const POSTS_BY_CATEGORY_QUERY = groq`*[_type == "post" && status == "published" && defined(slug.current) && references(*[_type == "category" && slug.current == $category]._id)] | order(publishedAt desc) ${postsProjection}`;
+
+const POSTS_BY_CATEGORY_PAGE_QUERY = groq`*[_type == "post" && status == "published" && defined(slug.current) && references(*[_type == "category" && slug.current == $category]._id)] | order(publishedAt desc)[$offset...$limit] ${postsProjection}`;
+
+const POSTS_BY_CATEGORY_COUNT_QUERY = groq`count(*[_type == "post" && status == "published" && defined(slug.current) && references(*[_type == "category" && slug.current == $category]._id)])`;
 
 const RELATED_POSTS_QUERY = groq`*[_type == "post" && status == "published" && defined(slug.current) && slug.current != $slug && references(*[_type == "category" && slug.current in $categories]._id)] | order(publishedAt desc)[0...$limit] ${postsProjection}`;
 
@@ -90,11 +98,48 @@ export async function getPosts(): Promise<PostCard[]> {
   return sanityFetch({ query: POSTS_QUERY, revalidate: 60 });
 }
 
+export async function getPostsPage(
+  offset: number,
+  limit: number
+): Promise<PostCard[]> {
+  return sanityFetch({
+    query: POSTS_PAGE_QUERY,
+    params: { offset, limit },
+    revalidate: 60,
+  });
+}
+
+export async function getPostsCount(): Promise<number> {
+  return sanityFetch({ query: POSTS_COUNT_QUERY, revalidate: 60 });
+}
+
 export async function getPostsByCategory(
   category: string
 ): Promise<PostCard[]> {
   return sanityFetch({
     query: POSTS_BY_CATEGORY_QUERY,
+    params: { category },
+    revalidate: 60,
+  });
+}
+
+export async function getPostsByCategoryPage(
+  category: string,
+  offset: number,
+  limit: number
+): Promise<PostCard[]> {
+  return sanityFetch({
+    query: POSTS_BY_CATEGORY_PAGE_QUERY,
+    params: { category, offset, limit },
+    revalidate: 60,
+  });
+}
+
+export async function getPostsByCategoryCount(
+  category: string
+): Promise<number> {
+  return sanityFetch({
+    query: POSTS_BY_CATEGORY_COUNT_QUERY,
     params: { category },
     revalidate: 60,
   });

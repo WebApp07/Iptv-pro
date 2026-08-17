@@ -10,7 +10,7 @@ function InlineImage({ value }: { value: SanityImage }) {
   const alt = value.alt || "Image inside the article";
   return (
     <figure className="my-8">
-      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-border">
+      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <Image
           src={urlFor(value).auto("format").url()}
           alt={alt}
@@ -34,12 +34,12 @@ function CodeBlock({
   value: { code?: string; language?: string; filename?: string };
 }) {
   return (
-    <div className="my-6 overflow-hidden rounded-xl border border-border bg-[#0d1017]">
+    <div className="my-6 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       {value.filename ? (
-        <div className="flex items-center justify-between border-b border-border px-4 py-2">
+        <div className="flex items-center justify-between border-b border-border bg-secondary/40 px-4 py-2">
           <span className="text-xs text-muted">{value.filename}</span>
           {value.language ? (
-            <span className="text-xs uppercase tracking-wide text-muted">
+            <span className="text-xs uppercase tracking-[0.15em] text-[#ffd166]">
               {value.language}
             </span>
           ) : null}
@@ -55,27 +55,27 @@ function CodeBlock({
 const components: PortableTextComponents = {
   block: {
     h2: ({ children }) => (
-      <h2 className="mt-10 scroll-mt-24 font-display text-2xl font-bold tracking-tight sm:text-3xl">
+      <h2 className="mt-12 scroll-mt-24 font-display text-2xl font-bold tracking-tight sm:text-3xl">
         {children}
       </h2>
     ),
     h3: ({ children }) => (
-      <h3 className="mt-8 scroll-mt-24 font-display text-xl font-bold tracking-tight sm:text-2xl">
+      <h3 className="mt-9 scroll-mt-24 font-display text-xl font-bold tracking-tight sm:text-2xl">
         {children}
       </h3>
     ),
     h4: ({ children }) => (
-      <h4 className="mt-6 scroll-mt-24 font-heading text-lg font-semibold">
+      <h4 className="mt-7 scroll-mt-24 font-heading text-lg font-semibold">
         {children}
       </h4>
     ),
     blockquote: ({ children }) => (
-      <blockquote className="my-6 border-l-4 border-primary bg-card/60 px-5 py-4 text-lg text-foreground/85 italic">
+      <blockquote className="my-7 border-l-4 border-[#ffd166]/60 bg-[#ffd166]/5 px-6 py-5 text-lg text-foreground/90 not-italic">
         {children}
       </blockquote>
     ),
     normal: ({ children }) => (
-      <p className="my-4 leading-relaxed text-foreground/85">{children}</p>
+      <p className="my-5 leading-relaxed text-foreground/85">{children}</p>
     ),
   },
   marks: {
@@ -84,7 +84,7 @@ const components: PortableTextComponents = {
     ),
     em: ({ children }) => <em className="italic">{children}</em>,
     code: ({ children }) => (
-      <code className="rounded bg-card px-1.5 py-0.5 font-mono text-sm text-accent">
+      <code className="rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-sm text-[#ffd166]">
         {children}
       </code>
     ),
@@ -97,7 +97,7 @@ const components: PortableTextComponents = {
           href={href}
           target={external ? "_blank" : undefined}
           rel={external ? "noopener noreferrer" : undefined}
-          className="text-primary underline underline-offset-4 transition-colors hover:text-accent"
+          className="text-[#ffd166] underline underline-offset-4 transition-colors hover:text-[#f4c255]"
         >
           {children}
         </a>
@@ -106,12 +106,12 @@ const components: PortableTextComponents = {
   },
   list: {
     bullet: ({ children }) => (
-      <ul className="my-4 list-disc space-y-2 pl-6 text-foreground/85">
+      <ul className="my-5 space-y-2.5 pl-6 text-foreground/85">
         {children}
       </ul>
     ),
     number: ({ children }) => (
-      <ol className="my-4 list-decimal space-y-2 pl-6 text-foreground/85">
+      <ol className="my-5 space-y-2.5 pl-6 text-foreground/85">
         {children}
       </ol>
     ),
@@ -136,7 +136,7 @@ export function PortableTextContent({
   value: Parameters<typeof PortableText>[0]["value"];
 }) {
   return (
-    <div className="text-base sm:text-lg">
+    <div className="text-base leading-relaxed sm:text-lg">
       <PortableText value={value} components={components} />
     </div>
   );
