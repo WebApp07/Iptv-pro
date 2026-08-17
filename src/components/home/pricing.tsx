@@ -6,7 +6,7 @@ import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 const features = [
-  "All the Greek channels you watch",
+  "Channels from all over the world",
   "Anti-freeze technology",
   "4K Ultra HD support",
   "EPG TV guide",
@@ -84,7 +84,7 @@ export function Pricing() {
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted">
             Pick how many devices you need, then choose a term that fits your
-            budget. Every plan includes the full Greek lineup with HD, and 4K
+            budget. Every plan includes the full channel lineup in HD, with 4K
             where the source supports it. No contracts, no surprise renewals.
           </p>
         </div>

@@ -49,9 +49,9 @@ export function Hero() {
           </h1>
 
 <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/85 sm:text-lg">
-            Your Greek channels, the sport you follow and a big movie library,
-            all under one subscription. No contracts, and your login arrives
-            within minutes on WhatsApp.
+            Live channels from all over the world, the sport you follow and a
+            big movie library, under one subscription. No contracts, and your
+            login arrives within minutes on WhatsApp.
           </p>
 
           <div className="mt-10 flex w-full flex-col gap-4 sm:w-auto sm:flex-row">

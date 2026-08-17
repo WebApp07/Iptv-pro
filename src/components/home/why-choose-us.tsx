@@ -3,9 +3,9 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const features = [
   {
-    title: "Greek channels, front and center",
+    title: "Your channels, front and center",
     description:
-      "ERT, Mega, Ant1 and Alpha, plus the international sports and entertainment you follow. Your lineup, not a list of channels you'll never open.",
+      "The live channels you actually watch, plus the international sports and entertainment you follow. Your lineup, not a list of channels you'll never open.",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -97,7 +97,7 @@ const features = [
   {
     title: "Support that answers",
     description:
-      "Setup help over WhatsApp and email, in Greek and English. When you're stuck, a real person replies.",
+      "Setup help over WhatsApp and email, in your language. When you're stuck, a real person replies.",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -131,8 +131,8 @@ export function WhyChooseUs() {
             Why choose us?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted">
-            Choosing an IPTV provider in Greece comes down to two things: whether
-            the channels you actually watch work, and whether you get help when
+            Choosing an IPTV provider comes down to two things: whether the
+            channels you actually watch work, and whether you get help when
             they don&apos;t. We built the service around both.
           </p>
         </div>

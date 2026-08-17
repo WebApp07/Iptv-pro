@@ -68,12 +68,12 @@ const chats: Chat[] = [
       },
       {
         from: "them",
-        text: "And the Greek channels?",
+        text: "And the channels you actually watch?",
         time: "18:06",
       },
       {
         from: "me",
-        text: "All of them. ERT, Mega, Ant1, the lot. Cheaper than what we paid the cable guy.",
+        text: "All of them. The league, the news, everything. Cheaper than what we paid the cable guy.",
         time: "18:07",
         status: "read",
       },

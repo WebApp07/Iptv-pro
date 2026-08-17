@@ -15,7 +15,6 @@ type Channel = {
 const channels: Channel[] = [
   { name: "beIN Sports", tag: "Football", logo: "/images/channels/bein-sports.webp", width: 150, height: 46 },
   { name: "Nova", tag: "Entertainment", logo: "/images/channels/nova.svg", width: 220, height: 64 },
-  { name: "Cosmote TV", tag: "Greek channels", logo: "/images/channels/cosmote.png", width: 150, height: 46 },
   { name: "Sky", tag: "Movies & series", logo: "/images/channels/sky.svg", width: 220, height: 64 },
   { name: "Canal+", tag: "Movies", logo: "/images/channels/canalplus.svg", width: 220, height: 64 },
   { name: "Eurosport", tag: "All sports", logo: "/images/channels/eurosport.svg", width: 220, height: 64 },

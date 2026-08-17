@@ -38,7 +38,7 @@ const faqs = [
   {
     question: "Do you help with setup?",
     answer:
-      "Yes. Message us on WhatsApp and we'll walk you through any device, step by step, in Greek or English. Most setups are sorted in a few minutes.",
+      "Yes. Message us on WhatsApp and we'll walk you through any device, step by step. Most setups are sorted in a few minutes.",
   },
   {
     question: "What about support after I subscribe?",
