@@ -4,7 +4,7 @@ import { Sports } from "@/components/home/sports";
 import { HowItWorks } from "@/components/home/how-it-works";
 import { WhyChooseUs } from "@/components/home/why-choose-us";
 import { Pricing } from "@/components/home/pricing";
-import { Testimonials } from "@/components/home/testimonials";
+import { CustomerFeedback } from "@/components/customer-feedback";
 import { Faq } from "@/components/home/faq";
 import { Cta } from "@/components/home/cta";
 
@@ -17,7 +17,7 @@ export default function HomePage() {
       <HowItWorks />
       <WhyChooseUs />
       <Pricing />
-      <Testimonials />
+      <CustomerFeedback />
       <Faq />
       <Cta />
     </>
