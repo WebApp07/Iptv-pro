@@ -2,10 +2,11 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 const features = [
-  "24,000+ live channels",
+  "All the Greek channels you watch",
   "Anti-freeze technology",
   "4K Ultra HD support",
   "EPG TV guide",
@@ -79,13 +80,12 @@ export function Pricing() {
             Pricing
           </Badge>
           <h2 className="font-display mx-auto mt-6 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
-            Flexible programs that fit your needs
+            Plans that fit how you watch
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted">
-            Pick the number of devices you need, choose a duration that fits
-            your budget, and pay a price that makes sense. Every plan includes
-            the full Greek channel lineup with HD and 4K on supported channels.
-            No contracts, no surprise renewals.
+            Pick how many devices you need, then choose a term that fits your
+            budget. Every plan includes the full Greek lineup with HD, and 4K
+            where the source supports it. No contracts, no surprise renewals.
           </p>
         </div>
 
@@ -199,7 +199,7 @@ export function Pricing() {
         <p className="mx-auto mt-10 max-w-xl text-center text-sm text-muted">
           Watching on more than two screens?{" "}
           <a
-            href="https://wa.me/+100000000"
+            href={siteConfig.whatsappUrl}
             className="text-[#ffd166] transition-colors hover:text-[#f4c255]"
           >
             Message us on WhatsApp

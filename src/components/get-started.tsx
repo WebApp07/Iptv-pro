@@ -8,13 +8,13 @@ const steps = [
     number: "01",
     title: "Choose Your Plan",
     description:
-      "Pick the plan that fits how you watch. Choose the number of devices you need and the duration that suits your budget.",
+      "Pick how many devices you need and how long you want to watch. The whole thing takes a couple of minutes.",
   },
   {
     number: "02",
     title: "Get Your Credentials",
     description:
-      "Complete your order and your login details arrive by email and WhatsApp, ready to use right away.",
+      "Pay for your plan and the login details land in your email and WhatsApp, ready to use straight away.",
   },
   {
     number: "03",

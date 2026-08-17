@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
@@ -49,10 +48,10 @@ export function Hero() {
             </span>
           </h1>
 
-          <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/85 sm:text-lg">
-            Your Greek channels, international sport and a big movie library,
-            all in one subscription. No contracts, and your login arrives within
-            minutes by WhatsApp.
+<p className="mt-6 max-w-2xl text-base leading-relaxed text-white/85 sm:text-lg">
+            Your Greek channels, the sport you follow and a big movie library,
+            all under one subscription. No contracts, and your login arrives
+            within minutes on WhatsApp.
           </p>
 
           <div className="mt-10 flex w-full flex-col gap-4 sm:w-auto sm:flex-row">
@@ -118,7 +117,8 @@ export function Hero() {
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-white/70">
               Message us on WhatsApp and we&apos;ll set up your free trial. No
-              card required, and we&apos;ll send your login details right away.
+              card required, and we&apos;ll send the login details over as soon
+              as it&apos;s ready.
             </p>
 
             <Link

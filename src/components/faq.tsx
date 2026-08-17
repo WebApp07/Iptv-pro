@@ -61,10 +61,11 @@ export function Faq() {
             Related questions
           </Badge>
           <h2 className="font-display mx-auto mt-6 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
-            Customers Questions
+            Questions People Ask
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted">
-            Your guide to better understanding our IPTV service.
+            Straight answers to the things people want to know before they
+            subscribe.
           </p>
         </div>
 

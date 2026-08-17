@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "IPTV Pro",
   description:
-    "Premium IPTV streaming platform with thousands of live channels, VOD, and 4K quality.",
+    "Greek channels, international sport and a big movie library, all under one subscription.",
   url: "https://iptv-pro.example.com",
   ogImage: "/og-image.png",
   links: {

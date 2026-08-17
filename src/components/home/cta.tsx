@@ -18,8 +18,7 @@ export function Cta() {
           </span>
         </h2>
         <p className="mx-auto mt-5 max-w-xl text-muted">
-          Join thousands of happy subscribers today. Try it free for 24 hours —
-          no credit card required.
+          Try it free for 24 hours. No credit card, no commitment.
         </p>
 
         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -30,7 +29,7 @@ export function Cta() {
               "bg-[#ffd166] text-black shadow-[0_12px_48px_-12px] shadow-[#ffd166]/60 hover:bg-[#f4c255]"
             )}
           >
-            Buy Subscription
+            See Plans
           </Link>
           <Link
             href="/register"
@@ -39,7 +38,7 @@ export function Cta() {
               "border-white/20 bg-white/5 text-white backdrop-blur hover:bg-white/10"
             )}
           >
-            Request Free Trial
+            Start Free Trial
           </Link>
         </div>
       </div>

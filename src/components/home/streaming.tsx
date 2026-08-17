@@ -21,8 +21,8 @@ export function Streaming() {
             <span className="text-[#ffd166]">Movies &amp; TV Shows</span>
           </h2>
           <p className="mx-auto mt-5 max-w-lg text-base leading-relaxed text-white/60">
-            Netflix, Disney+, Prime Video, HBO Max, Hulu and more — unified in a
-            single premium experience.
+            Netflix, Disney+, Prime Video, HBO Max, Hulu and more, all in one
+            app. No jumping between subscriptions, no juggling logins.
           </p>
         </div>
       </div>

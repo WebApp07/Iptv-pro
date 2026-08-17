@@ -113,8 +113,8 @@ export function PopularChannels() {
             The channels people ask about most
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted">
-            From sport to movies and series, the networks viewers request most
-            are here, ready to stream on any screen.
+            Sport, movies, series, kids&apos; shows. The networks our customers
+            actually ask for, ready to stream on any screen.
           </p>
         </div>
       </div>
