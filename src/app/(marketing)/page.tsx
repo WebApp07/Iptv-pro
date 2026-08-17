@@ -8,6 +8,7 @@ import { Pricing } from "@/components/home/pricing";
 import { CustomerFeedback } from "@/components/customer-feedback";
 import { Faq } from "@/components/faq";
 import { Cta } from "@/components/home/cta";
+import { LatestFromBlog } from "@/components/home/latest-from-blog";
 
 export default function HomePage() {
   return (
@@ -21,6 +22,7 @@ export default function HomePage() {
       <Pricing />
       <CustomerFeedback />
       <Faq />
+      <LatestFromBlog />
       <Cta />
     </>
   );

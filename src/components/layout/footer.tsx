@@ -6,6 +6,7 @@ const footerLinks = {
     { title: "Channels", href: "/channels" },
     { title: "Pricing", href: "/pricing" },
     { title: "VOD Library", href: "/vod" },
+    { title: "Blog", href: "/blog" },
   ],
   Company: [
     { title: "About", href: "/about" },

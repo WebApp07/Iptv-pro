@@ -15,7 +15,12 @@ export const siteConfig = {
     { title: "Pricing", href: "/pricing" },
     { title: "About", href: "/about" },
     { title: "Contact", href: "/contact" },
+    { title: "Blog", href: "/blog" },
   ],
 } as const;
 
 export type SiteConfig = typeof siteConfig;
+
+export function siteUrl(path = ""): string {
+  return `${siteConfig.url}${path.startsWith("/") ? path : `/${path}`}`;
+}
