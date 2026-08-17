@@ -1,4 +1,5 @@
 import { Hero } from "@/components/home/hero";
+import { PopularChannels } from "@/components/popular-channels";
 import { Streaming } from "@/components/home/streaming";
 import { Sports } from "@/components/home/sports";
 import { HowItWorks } from "@/components/home/how-it-works";
@@ -12,6 +13,7 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <PopularChannels />
       <Streaming />
       <Sports />
       <HowItWorks />
