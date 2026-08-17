@@ -8,6 +8,7 @@ export const siteConfig = {
     twitter: "https://twitter.com/iptvpro",
     github: "https://github.com/iptvpro",
   },
+  whatsappUrl: "https://wa.me/+100000000",
   navLinks: [
     { title: "Home", href: "/" },
     { title: "Channels", href: "/channels" },
