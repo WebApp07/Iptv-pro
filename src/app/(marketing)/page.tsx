@@ -2,7 +2,7 @@ import { Hero } from "@/components/home/hero";
 import { PopularChannels } from "@/components/popular-channels";
 import { Streaming } from "@/components/home/streaming";
 import { Sports } from "@/components/home/sports";
-import { HowItWorks } from "@/components/home/how-it-works";
+import { GetStarted } from "@/components/get-started";
 import { WhyChooseUs } from "@/components/home/why-choose-us";
 import { Pricing } from "@/components/home/pricing";
 import { CustomerFeedback } from "@/components/customer-feedback";
@@ -16,7 +16,7 @@ export default function HomePage() {
       <PopularChannels />
       <Streaming />
       <Sports />
-      <HowItWorks />
+      <GetStarted />
       <WhyChooseUs />
       <Pricing />
       <CustomerFeedback />
