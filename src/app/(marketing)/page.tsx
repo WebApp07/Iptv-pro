@@ -5,7 +5,7 @@ import { HowItWorks } from "@/components/home/how-it-works";
 import { WhyChooseUs } from "@/components/home/why-choose-us";
 import { Pricing } from "@/components/home/pricing";
 import { CustomerFeedback } from "@/components/customer-feedback";
-import { Faq } from "@/components/home/faq";
+import { Faq } from "@/components/faq";
 import { Cta } from "@/components/home/cta";
 
 export default function HomePage() {
