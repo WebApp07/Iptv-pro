@@ -31,6 +31,8 @@ export interface League {
   logoUrl?: string;
   /** Season label as presented by the provider, e.g. "2026" or "2026-2027". */
   season?: string;
+  /** Clean URL slug (from the curated registry) when applicable. */
+  slug?: string;
 }
 
 export interface Team {
@@ -125,4 +127,6 @@ export interface EventQueryOptions {
   limit?: number;
   /** Filter to events on this date (YYYY-MM-DD) where supported. */
   date?: string;
+  /** Restrict results to one provider league id where supported. */
+  leagueId?: string;
 }

@@ -47,4 +47,10 @@ export interface SportsProvider {
     limit?: number
   ): Promise<HeadToHead["events"]>;
   getTeamForm?(teamId: string, limit?: number): Promise<TeamForm | null>;
+
+  /**
+   * Recent finished matches featuring a team (newest first) - used to
+   * derive recent form. Empty array when unsupported.
+   */
+  getTeamRecentEvents?(teamId: string, limit?: number): Promise<Match[]>;
 }

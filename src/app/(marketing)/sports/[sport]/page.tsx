@@ -9,7 +9,7 @@ import { ConversionSection } from "@/components/sports/conversion-section";
 import { RelatedSportsArticles } from "@/components/sports/related-articles";
 import {
   SportCategories,
-  SPORT_CATEGORIES,
+  resolveSportCategory,
 } from "@/components/sports/sport-categories";
 import { getUpcomingEventsWithStatus, isSportsDataConfigured } from "@/lib/sports";
 import { breadcrumbJsonLd, sportsEventsJsonLd } from "@/lib/sports/schema";
@@ -33,7 +33,7 @@ type SportPageProps = {
 
 export async function generateMetadata({ params }: SportPageProps): Promise<Metadata> {
   const { sport: raw } = await params;
-  const category = resolveSport(raw);
+  const category = resolveSportCategory(raw);
   // Checked here so unknown slugs skip straight to the not-found UI.
   if (!category || category.slug === "all") notFound();
 
@@ -58,17 +58,9 @@ export async function generateMetadata({ params }: SportPageProps): Promise<Meta
   };
 }
 
-function resolveSport(raw: string): (typeof SPORT_CATEGORIES)[number] | null {
-  return (
-    SPORT_CATEGORIES.find(
-      (category) => category.slug === raw.toLowerCase()
-    ) ?? null
-  );
-}
-
 export default async function SportPage({ params }: SportPageProps) {
   const { sport: raw } = await params;
-  const category = resolveSport(raw);
+  const category = resolveSportCategory(raw);
   if (!category || category.slug === "all") notFound();
 
   const label = category.label;

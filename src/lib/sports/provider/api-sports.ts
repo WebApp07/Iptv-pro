@@ -387,11 +387,29 @@ export function createApiSportsProvider(options?: {
     },
 
     async getLiveEvents(options) {
-      const events = await fixtures({ live: "all" }, SPORTS_CACHE_TTL.live);
+      const events = await fixtures(
+        {
+          live: "all",
+          ...(options?.leagueId ? { league: options.leagueId } : {}),
+        },
+        SPORTS_CACHE_TTL.live
+      );
       return options?.limit ? events.slice(0, options.limit) : events;
     },
 
     async getUpcomingEvents(options) {
+      if (options?.leagueId) {
+        // League-scoped upcoming fixtures use the league + season endpoint.
+        return fixtures(
+          {
+            league: options.leagueId,
+            season: currentSeasonYear(),
+            next: options.limit ?? DEFAULT_LIMIT,
+            ...(options.date ? { date: options.date } : {}),
+          },
+          SPORTS_CACHE_TTL.upcoming
+        );
+      }
       const events = await fixtures(
         {
           next: options?.limit ?? DEFAULT_LIMIT,
@@ -456,6 +474,13 @@ export function createApiSportsProvider(options?: {
     async getHeadToHead(teamA, teamB, limit = 5) {
       return fixtures(
         { h2h: `${teamA}-${teamB}`, last: limit },
+        SPORTS_CACHE_TTL.event
+      );
+    },
+
+    async getTeamRecentEvents(teamId, limit = 5) {
+      return fixtures(
+        { team: teamId, last: limit },
         SPORTS_CACHE_TTL.event
       );
     },

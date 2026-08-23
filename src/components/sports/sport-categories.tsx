@@ -17,6 +17,17 @@ export function isValidSportCategory(value: string): value is SportCategorySlug 
   return SPORT_CATEGORIES.some((category) => category.slug === value);
 }
 
+/** Case-insensitive lookup; "all" is a valid category. Null when unknown. */
+export function resolveSportCategory(
+  raw: string
+): (typeof SPORT_CATEGORIES)[number] | null {
+  return (
+    SPORT_CATEGORIES.find(
+      (category) => category.slug === raw.toLowerCase()
+    ) ?? null
+  );
+}
+
 /**
  * Category navigation for the hub. Clean routes per sport - no query params.
  * Server-rendered links - no client JS. "More" points at the live TV page

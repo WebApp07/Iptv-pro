@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MatchCard, SportsNotice, formatKickoff, formatKickoffTime } from "@/components/sports/match-card";
+import { MatchGridWithDetails, SportsNotice, formatKickoff, formatKickoffTime } from "@/components/sports/match-card";
 import {
   getUpcomingEventsWithStatus,
   isSportsDataConfigured,
@@ -56,10 +56,12 @@ export async function UpcomingEvents({
   limit = 12,
   date,
   sport,
+  leagueId,
 }: {
   limit?: number;
   date?: string;
   sport?: SportSlug;
+  leagueId?: string;
 }) {
   const supported =
     !sport || sport === "all" ? true : await isSportSupported(sport);
@@ -67,7 +69,7 @@ export async function UpcomingEvents({
     ? NOT_CONFIGURED
     : !supported
       ? ({ data: [], status: "ok" } as SportsResult<Match[]>)
-      : await getUpcomingEventsWithStatus({ limit, date });
+      : await getUpcomingEventsWithStatus({ limit, date, leagueId });
 
   const heading =
     date && result.status === "ok" && result.data.length > 0
@@ -115,11 +117,10 @@ export async function UpcomingEvents({
             />
           )
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {result.data.map((match) => (
-              <MatchCard key={match.id} match={match} details={<DetailsCta match={match} />} />
-            ))}
-          </div>
+          <MatchGridWithDetails
+            matches={result.data}
+            renderDetails={(match) => <DetailsCta match={match} />}
+          />
         )}
       </div>
     </section>

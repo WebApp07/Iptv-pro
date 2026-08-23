@@ -30,6 +30,12 @@ import type {
 import { SportsProviderError } from "./errors";
 import type { SportsProvider } from "./provider/types";
 import { createApiSportsProvider } from "./provider/api-sports";
+import {
+  LEAGUE_REGISTRY,
+  matchesEntryName,
+  findRegistryEntry,
+  type LeagueRegistryEntry,
+} from "./leagues";
 
 export type {
   EventQueryOptions,
@@ -105,19 +111,32 @@ async function safeResult<T>(
 /* Cached internals - primitive keys keep dedupe reliable              */
 /* ------------------------------------------------------------------ */
 
-const liveCore = cache(async (limit?: number): Promise<SportsResult<Match[]>> =>
-  safeResult(
-    async (provider) => {
-      const events = await provider.getLiveEvents(limit ? { limit } : undefined);
-      return limit ? events.slice(0, limit) : events;
-    },
-    []
-  )
+const liveCore = cache(
+  async (
+    limit?: number,
+    leagueId?: string
+  ): Promise<SportsResult<Match[]>> =>
+    safeResult(
+      async (provider) => {
+        const events = await provider.getLiveEvents(
+          limit || leagueId ? { limit, leagueId } : undefined
+        );
+        return limit ? events.slice(0, limit) : events;
+      },
+      []
+    )
 );
 
 const upcomingCore = cache(
-  async (limit?: number, date?: string): Promise<SportsResult<Match[]>> =>
-    safeResult(async (provider) => provider.getUpcomingEvents({ limit, date }), [])
+  async (
+    limit?: number,
+    date?: string,
+    leagueId?: string
+  ): Promise<SportsResult<Match[]>> =>
+    safeResult(
+      async (provider) => provider.getUpcomingEvents({ limit, date, leagueId }),
+      []
+    )
 );
 
 const eventByIdCore = cache(
@@ -163,31 +182,79 @@ const statisticsCore = cache(
     )
 );
 
-/**
- * Well-known football league ids in API-Sports, used to curate the
- * "Popular Leagues" section. Provider-specific by nature - when another
- * provider is added, move this list into its adapter.
- */
-const POPULAR_LEAGUE_IDS = ["39", "140", "135", "78", "61", "2"] as const;
-
-const popularLeaguesCore = cache(
-  async (): Promise<SportsResult<League[]>> =>
+const headToHeadCore = cache(
+  async (
+    teamAId: string,
+    teamBId: string,
+    limit: number
+  ): Promise<SportsResult<Match[]>> =>
     safeResult(
-      async (provider) => {
-        if (!provider.getLeagueById) return [];
-        const resolved = await Promise.all(
-          POPULAR_LEAGUE_IDS.map((id) => provider.getLeagueById!(id))
-        );
-        // Drop leagues that came back empty so we never render placeholders.
-        return resolved.filter((league): league is League => league !== null);
-      },
+      async (provider) =>
+        provider.getHeadToHead ? provider.getHeadToHead(teamAId, teamBId, limit) : [],
       []
     )
 );
 
-const leaguesForSportCore = cache(
-  async (sport: SportSlug, limit: number): Promise<SportsResult<League[]>> =>
-    safeResult(async (provider) => provider.getLeagues({ sport, limit }), [])
+const teamRecentEventsCore = cache(
+  async (
+    teamId: string,
+    limit: number
+  ): Promise<SportsResult<Match[]>> =>
+    safeResult(
+      async (provider) =>
+        provider.getTeamRecentEvents ? provider.getTeamRecentEvents(teamId, limit) : [],
+      []
+    )
+);
+
+/**
+ * Curated registry of popular competitions (see leagues.ts). Entries only
+ * surface when the configured provider actually resolves them - unsupported
+ * sports/leagues never render or link.
+ */
+const allLeaguesCore = cache(async (): Promise<SportsResult<League[]>> =>
+  safeResult((provider) => provider.getLeagues({}), [])
+);
+
+async function resolveRegistryEntry(
+  provider: SportsProvider,
+  entry: LeagueRegistryEntry
+): Promise<League | null> {
+  // 1) Shortcut with a known provider id when we have one.
+  if (entry.knownId && provider.getLeagueById) {
+    const byId = await provider.getLeagueById(entry.knownId);
+    if (byId) return { ...byId, slug: entry.slug };
+  }
+  // 2) Fall back to exact name matching over the league listing.
+  const all = await allLeaguesCore();
+  if (all.status !== "ok") return null;
+  const found = all.data.find(
+    (league) =>
+      league.sportId === entry.sport && matchesEntryName(entry, league.name)
+  );
+  return found ? { ...found, slug: entry.slug } : null;
+}
+
+export interface ResolvedLeague {
+  entry: LeagueRegistryEntry;
+  league: League;
+}
+
+export interface ResolvedLeague {
+  entry: LeagueRegistryEntry;
+  league: League;
+}
+
+const popularLeaguesCore = cache(
+  async (): Promise<SportsResult<ResolvedLeague[]>> =>
+    safeResult(async (provider) => {
+      const resolved: ResolvedLeague[] = [];
+      for (const entry of LEAGUE_REGISTRY) {
+        const league = await resolveRegistryEntry(provider, entry);
+        if (league) resolved.push({ entry, league });
+      }
+      return resolved;
+    }, [])
 );
 
 const supportedSportsCore = cache(async (): Promise<SportsResult<Sport[]>> =>
@@ -199,15 +266,15 @@ const supportedSportsCore = cache(async (): Promise<SportsResult<Sport[]>> =>
 /* ------------------------------------------------------------------ */
 
 export async function getLiveEventsWithStatus(
-  options?: Pick<EventQueryOptions, "limit">
+  options?: Pick<EventQueryOptions, "limit" | "leagueId">
 ): Promise<SportsResult<Match[]>> {
-  return liveCore(options?.limit);
+  return liveCore(options?.limit, options?.leagueId);
 }
 
 export async function getUpcomingEventsWithStatus(
   options?: EventQueryOptions
 ): Promise<SportsResult<Match[]>> {
-  return upcomingCore(options?.limit, options?.date);
+  return upcomingCore(options?.limit, options?.date, options?.leagueId);
 }
 
 export async function getEventByIdWithStatus(
@@ -242,24 +309,66 @@ export async function getEventStatisticsWithStatus(
   return statisticsCore(eventId);
 }
 
+/** Previous meetings between two teams (newest first). */
+export async function getHeadToHeadWithStatus(
+  teamAId: string,
+  teamBId: string,
+  limit = 5
+): Promise<SportsResult<Match[]>> {
+  return headToHeadCore(teamAId, teamBId, limit);
+}
+
+/** Recent finished matches for a team, newest first. */
+export async function getTeamRecentEventsWithStatus(
+  teamId: string,
+  limit = 5
+): Promise<SportsResult<Match[]>> {
+  return teamRecentEventsCore(teamId, limit);
+}
+
 /**
- * Curated popular leagues, resolved from live provider metadata.
- * Football uses a curated id list; other sports fall back to the
- * provider's league listing and return empty when unsupported.
+ * Popular leagues from the curated registry, resolved against live provider
+ * metadata. Registry entries the provider cannot resolve are omitted.
+ * When `sport` is given only that sport's leagues are returned.
  */
 export async function getPopularLeagues(
-  sport: SportSlug = "football"
-): Promise<SportsResult<League[]>> {
-  if (sport === "football") {
-    return popularLeaguesCore();
+  sport?: SportSlug
+): Promise<SportsResult<ResolvedLeague[]>> {
+  const result = await popularLeaguesCore();
+  if (result.status !== "ok") return result;
+  return {
+    status: "ok",
+    data: sport
+      ? result.data.filter((item) => item.entry.sport === sport)
+      : result.data,
+  };
+}
+
+/**
+ * Resolves a registry league route (/sports/<sport>/<league-slug>).
+ * Returns null for unknown slug/sport combinations; `league` is null when
+ * the entry exists but the provider does not cover it (page must render an
+ * honest coming-soon state and stay out of the index).
+ */
+export async function getLeagueRoute(
+  sport: SportSlug,
+  leagueSlug: string
+): Promise<{ entry: LeagueRegistryEntry; league: League | null } | null> {
+  const entry = findRegistryEntry(sport, leagueSlug);
+  if (!entry) return null;
+  let provider: SportsProvider;
+  try {
+    provider = getProvider();
+  } catch {
+    return { entry, league: null };
   }
-  const result = await leaguesForSportCore(sport, 6);
-  // Only claim popular status for sports the provider actually covers.
-  const supported = await isSportSupported(sport);
-  if (!supported) {
-    return { data: [], status: result.status };
+  if (!provider.isConfigured()) return { entry, league: null };
+  try {
+    const league = await resolveRegistryEntry(provider, entry);
+    return { entry, league };
+  } catch {
+    return { entry, league: null };
   }
-  return result;
 }
 
 /**

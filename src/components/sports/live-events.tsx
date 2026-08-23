@@ -1,4 +1,4 @@
-import { MatchCard, SportsNotice } from "@/components/sports/match-card";
+import { MatchGrid, SportsNotice } from "@/components/sports/match-card";
 import {
   getLiveEventsWithStatus,
   isSportsDataConfigured,
@@ -15,9 +15,11 @@ const NOT_CONFIGURED: SportsResult<Match[]> = {
 export async function LiveEvents({
   limit = 10,
   sport,
+  leagueId,
 }: {
   limit?: number;
   sport?: SportSlug;
+  leagueId?: string;
 }) {
   // Unsupported sports render an honest coming-soon state - no wasted
   // provider calls and no empty-looking results.
@@ -27,7 +29,7 @@ export async function LiveEvents({
     ? NOT_CONFIGURED
     : !supported
       ? ({ data: [], status: "ok" } as SportsResult<Match[]>)
-      : await getLiveEventsWithStatus({ limit });
+      : await getLiveEventsWithStatus({ limit, leagueId });
 
   return (
     <section aria-labelledby="live-events-heading">
@@ -66,11 +68,7 @@ export async function LiveEvents({
             />
           )
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {result.data.map((match) => (
-              <MatchCard key={match.id} match={match} />
-            ))}
-          </div>
+          <MatchGrid matches={result.data} />
         )}
       </div>
     </section>

@@ -1,15 +1,17 @@
 import Image from "next/image";
-import { getPopularLeagues, type SportSlug } from "@/lib/sports";
+import Link from "next/link";
+import { getPopularLeagues } from "@/lib/sports";
 
 /**
- * Popular leagues resolved from live provider metadata (24h cache).
- * Renders nothing when the provider is unavailable - never placeholders.
+ * Popular leagues from the curated registry, resolved against live provider
+ * metadata (24h cached). Only resolved leagues render - unsupported sports
+ * or unresolvable entries never appear. Renders nothing on provider failure.
  */
 export async function PopularLeagues({
-  sport = "football",
+  sport,
   title = "Popular leagues",
 }: {
-  sport?: SportSlug;
+  sport?: string;
   title?: string;
 }) {
   const result = await getPopularLeagues(sport);
@@ -29,33 +31,35 @@ export async function PopularLeagues({
       </div>
 
       <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        {result.data.map((league) => (
-          <li
-            key={league.id}
-            className="flex flex-col items-center rounded-xl border border-border bg-card p-5 text-center transition-colors hover:border-[#ffd166]/40"
-          >
-            {league.logoUrl ? (
-              <Image
-                src={league.logoUrl}
-                alt=""
-                width={48}
-                height={48}
-                className="h-12 w-12 object-contain"
-              />
-            ) : (
-              <span
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/60 font-display text-sm font-bold text-muted"
-                aria-hidden="true"
-              >
-                {league.name.slice(0, 2).toUpperCase()}
-              </span>
-            )}
-            <p className="mt-3 line-clamp-2 text-sm font-semibold leading-snug">
-              {league.name}
-            </p>
-            {league.country ? (
-              <p className="mt-1 text-xs text-muted">{league.country}</p>
-            ) : null}
+        {result.data.map(({ entry, league }) => (
+          <li key={`${entry.sport}-${entry.slug}`}>
+            <Link
+              href={`/sports/${entry.sport}/${entry.slug}`}
+              className="flex h-full flex-col items-center rounded-xl border border-border bg-card p-5 text-center transition-colors hover:border-[#ffd166]/40"
+            >
+              {league.logoUrl ? (
+                <Image
+                  src={league.logoUrl}
+                  alt=""
+                  width={48}
+                  height={48}
+                  className="h-12 w-12 object-contain"
+                />
+              ) : (
+                <span
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/60 font-display text-sm font-bold text-muted"
+                  aria-hidden="true"
+                >
+                  {(league.name || entry.label).slice(0, 2).toUpperCase()}
+                </span>
+              )}
+              <p className="mt-3 line-clamp-2 text-sm font-semibold leading-snug">
+                {league.name || entry.label}
+              </p>
+              {league.country ? (
+                <p className="mt-1 text-xs text-muted">{league.country}</p>
+              ) : null}
+            </Link>
           </li>
         ))}
       </ul>

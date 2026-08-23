@@ -193,3 +193,35 @@ export function SportsNotice({
     </div>
   );
 }
+
+/** Responsive grid of match cards, shared by every sports surface. */
+export function MatchGrid({ matches }: { matches: Match[] }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {matches.map((match) => (
+        <MatchCard key={match.id} match={match} />
+      ))}
+    </div>
+  );
+}
+
+/** Same grid, but each card carries its own details block. */
+export function MatchGridWithDetails({
+  matches,
+  renderDetails,
+}: {
+  matches: Match[];
+  renderDetails?: (match: Match) => ReactNode;
+}) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {matches.map((match) => (
+        <MatchCard
+          key={match.id}
+          match={match}
+          details={renderDetails ? renderDetails(match) : undefined}
+        />
+      ))}
+    </div>
+  );
+}

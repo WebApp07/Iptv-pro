@@ -1,9 +1,7 @@
 import type { MetadataRoute } from "next";
 import { siteUrl } from "@/config/site";
-import {
-  getCategorySlugs,
-  getPostSlugs,
-} from "@/sanity/lib/queries";
+import { getCategorySlugs, getPostSlugs } from "@/sanity/lib/queries";
+import { getPopularLeagues as getSportPopularLeagues } from "@/lib/sports";
 
 export const revalidate = 3600;
 
@@ -52,5 +50,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Same as above - categories are additive, never critical.
   }
 
-  return [...staticRoutes, ...categoryRoutes, ...postRoutes];
+  let leagueRoutes: MetadataRoute.Sitemap = [];
+  try {
+    // Only registry leagues the provider actually resolves get a URL -
+    // unresolved entries would be thin, noindex pages.
+    const resolved = await getSportPopularLeagues();
+    if (resolved.status === "ok") {
+      leagueRoutes = resolved.data.map(({ entry }) => ({
+        url: siteUrl(`/sports/${entry.sport}/${entry.slug}`),
+        changeFrequency: "hourly",
+        priority: 0.6,
+      }));
+    }
+  } catch {
+    // Sports routes are additive, never critical.
+  }
+
+  return [...staticRoutes, ...categoryRoutes, ...postRoutes, ...leagueRoutes];
 }
