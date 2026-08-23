@@ -4,13 +4,23 @@ import { Badge } from "@/components/ui/badge";
 import { getSportsRelatedPosts } from "@/sanity/lib/queries";
 
 /**
- * Related blog articles for the Sports Hub. Rendered only when the CMS has
- * sports-related content - the section is omitted otherwise.
+ * "Related Sports Guides" - real Sanity articles related to the current
+ * sports surface. Matching runs through getSportsRelatedPosts: post tags,
+ * SEO keywords, focus keyword and category titles are intersected with the
+ * page context terms plus the default sports vocabulary.
+ *
+ * Rendered only when qualifying posts exist; the section omits itself
+ * otherwise (no filler, no fake articles).
  */
-export async function RelatedSportsArticles() {
+export async function RelatedSportsArticles({
+  terms,
+}: {
+  /** Page-context keywords, e.g. ["nba", "basketball"] on the NBA page. */
+  terms?: string[];
+}) {
   let posts: Awaited<ReturnType<typeof getSportsRelatedPosts>> = [];
   try {
-    posts = await getSportsRelatedPosts();
+    posts = await getSportsRelatedPosts(terms);
   } catch {
     return null;
   }
@@ -25,7 +35,7 @@ export async function RelatedSportsArticles() {
         From the blog
       </Badge>
       <h2 id="related-sports-heading" className="mt-4 font-display text-2xl font-bold tracking-tight sm:text-3xl">
-        Related sports reading
+        Related Sports Guides
       </h2>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

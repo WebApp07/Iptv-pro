@@ -130,7 +130,13 @@ export async function LeaguePageContent({
         )}
 
         <ConversionSection />
-        <RelatedSportsArticles />
+        <RelatedSportsArticles
+          terms={[
+            entry.label.toLowerCase(),
+            ...(league?.name ? [league.name.toLowerCase()] : []),
+            category.slug,
+          ]}
+        />
       </section>
 
       <script

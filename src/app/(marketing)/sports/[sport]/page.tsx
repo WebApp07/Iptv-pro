@@ -137,7 +137,7 @@ export default async function SportPage({ params }: SportPageProps) {
         <UpcomingEvents limit={12} sport={category.slug} />
         <PopularLeagues sport={category.slug} title={`${label} leagues`} />
         <ConversionSection />
-        <RelatedSportsArticles />
+        <RelatedSportsArticles terms={[category.label.toLowerCase()]} />
       </section>
 
       <script

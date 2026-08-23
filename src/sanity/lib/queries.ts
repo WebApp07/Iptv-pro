@@ -147,20 +147,81 @@ const RSS_POSTS_QUERY = groq`*[${INDEXABLE_FILTER}] | order(publishedAt desc)[0.
  * "related content" section. Matches on editor tags/keywords or sporty
  * titles; returns [] when nothing qualifies so the section can be omitted.
  */
-const SPORTS_RELATED_POSTS_QUERY = groq`*[
-  ${INDEXABLE_FILTER}
-  && (
-    count(tags[@ in $tags]) > 0
-    || count(seoKeywords[@ in $tags]) > 0
-    || (defined(focusKeyword) && focusKeyword in $tags)
-    || title match "football*"
-    || title match "soccer*"
-    || title match "sport*"
-    || title match "champions league*"
-    || title match "premier league*"
-    || title match "watch *"
-  )
-] | order(publishedAt desc)[0...3] ${postsProjection}`;
+/**
+ * Default sports vocabulary used to relate blog posts to sports surfaces.
+ * Editors extend reach simply by tagging posts with any of these words -
+ * no schema or code change required per article.
+ */
+/**
+ * Default sports vocabulary used to relate blog posts to sports surfaces.
+ * Editors extend reach simply by tagging posts with any of these words -
+ * no schema or code change required per article.
+ */
+const SPORTS_TERM_FALLBACK_TITLES = [
+  'title match "football*"',
+  'title match "soccer*"',
+  'title match "sport*"',
+  'title match "nba*"',
+  'title match "basketball*"',
+  'title match "champions league*"',
+  'title match "premier league*"',
+  'title match "watch *"',
+];
+
+/**
+ * One match condition per requested term. Uses the match operator so a
+ * term like "nba" also hits longer tags/keywords such as "nba streaming",
+ * case-insensitively across tags, SEO keywords, focus keyword and category
+ * titles. Params are pre-sanitized - see getSportsRelatedPosts.
+ */
+function termCondition(index: number): string {
+  const p = `$t${index}`;
+  return [
+    `count(tags[lower(@) match ${p}]) > 0`,
+    `count(seoKeywords[lower(@) match ${p}]) > 0`,
+    `count(categories[lower(@->title) match ${p}]) > 0`,
+    `(defined(focusKeyword) && lower(focusKeyword) match ${p})`,
+  ].join(" || ");
+}
+
+/** Strips characters that could alter GROQ pattern literals. */
+function sanitizeTerm(term: string): string {
+  return term.replace(/["'*\\\s]+/g, " ").trim();
+}
+
+/**
+ * Blog articles related to sports, for the Sports Hub surfaces.
+ *
+ * Matching is driven entirely by real Sanity content: post tags, SEO
+ * keywords, focus keyword and category titles are match-compared against
+ * the requested terms (e.g. ["nba", "basketball"] on the NBA page) plus a
+ * static set of sporty title patterns. Terms are sanitized before being
+ * bound as parameters - no raw strings enter the query text.
+ *
+ * Returns [] when nothing qualifies - callers omit the section instead of
+ * padding with unrelated posts.
+ */
+export async function getSportsRelatedPosts(
+  terms?: string[]
+): Promise<PostCard[]> {
+  const cleaned = [
+    ...new Set((terms ?? []).map(sanitizeTerm).filter(Boolean)),
+  ].slice(0, 8);
+
+  const params: QueryParams = {};
+  const conds = cleaned.map((term, index) => {
+    params[`t${index}`] = `${term}*`;
+    return termCondition(index);
+  });
+  const termBlock = conds.length ? `${conds.join(" || ")} || ` : "";
+
+  const query = groq`*[
+    ${INDEXABLE_FILTER}
+    && (${termBlock}${SPORTS_TERM_FALLBACK_TITLES.join(" || ")})
+  ] | order(publishedAt desc)[0...3] ${postsProjection}`;
+
+  return sanityFetch({ query, params, revalidate: 300 });
+}
 
 export async function getPosts(): Promise<PostCard[]> {
   return sanityFetch({ query: POSTS_QUERY, revalidate: 60 });
@@ -276,36 +337,11 @@ export async function getCategorySlugs(): Promise<CategorySlug[]> {
 }
 
 export async function getRssPosts(limit = 50): Promise<RssPost[]> {
-  return sanityFetch({
-    query: RSS_POSTS_QUERY,
-    params: { limit },
-    revalidate: 3600,
-  });
-}
-
-export async function getSportsRelatedPosts(): Promise<PostCard[]> {
-  const tags: QueryParams = {
-    tags: [
-      "football",
-      "soccer",
-      "sports",
-      "nba",
-      "basketball",
-      "tennis",
-      "hockey",
-      "mma",
-      "ufc",
-      "fifa",
-      "world cup",
-      "champions league",
-      "premier league",
-    ],
-  };
-  return sanityFetch({
-    query: SPORTS_RELATED_POSTS_QUERY,
-    params: tags,
-    revalidate: 300,
-  });
+    return sanityFetch({
+      query: RSS_POSTS_QUERY,
+      params: { limit },
+      revalidate: 3600,
+    });
 }
 
 export type { Author };
