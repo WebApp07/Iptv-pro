@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { Button } from "@/components/ui/button";
+import { NavLinks } from "@/components/layout/nav-links";
 
 export function Header() {
   return (
@@ -12,17 +13,7 @@ export function Header() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
-          {siteConfig.navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm text-muted transition-colors hover:text-foreground"
-            >
-              {link.title}
-            </Link>
-          ))}
-        </nav>
+        <NavLinks links={siteConfig.navLinks} />
 
         <div className="flex items-center gap-3">
           <Link href="/login">

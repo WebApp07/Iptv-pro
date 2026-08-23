@@ -11,11 +11,13 @@ export const siteConfig = {
   whatsappUrl: "https://wa.me/+100000000",
   navLinks: [
     { title: "Home", href: "/" },
+    { title: "Live TV", href: "/live-tv" },
+    { title: "Movies", href: "/movies" },
+    { title: "Series", href: "/series" },
+    { title: "Sports", href: "/sports" },
     { title: "Channels", href: "/channels" },
-    { title: "Pricing", href: "/pricing" },
-    { title: "About", href: "/about" },
-    { title: "Contact", href: "/contact" },
     { title: "Blog", href: "/blog" },
+    { title: "Pricing", href: "/pricing" },
   ],
 } as const;
 
