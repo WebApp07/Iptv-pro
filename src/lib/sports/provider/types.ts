@@ -27,6 +27,8 @@ export interface SportsProvider {
 
   getLeagues(options?: { sport?: SportSlug; limit?: number }): Promise<League[]>;
 
+  getLeagueById?(id: string): Promise<League | null>;
+
   getLiveEvents(options?: EventQueryOptions): Promise<Match[]>;
 
   getUpcomingEvents(options?: EventQueryOptions): Promise<Match[]>;

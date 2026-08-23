@@ -163,6 +163,31 @@ const statisticsCore = cache(
     )
 );
 
+/**
+ * Well-known football league ids in API-Sports, used to curate the
+ * "Popular Leagues" section. Provider-specific by nature - when another
+ * provider is added, move this list into its adapter.
+ */
+const POPULAR_LEAGUE_IDS = ["39", "140", "135", "78", "61", "2"] as const;
+
+const popularLeaguesCore = cache(async (): Promise<SportsResult<League[]>> =>
+  safeResult(
+    async (provider) => {
+      if (!provider.getLeagueById) return [];
+      const resolved = await Promise.all(
+        POPULAR_LEAGUE_IDS.map((id) => provider.getLeagueById!(id))
+      );
+      // Drop leagues that came back empty so we never render placeholders.
+      return resolved.filter((league): league is League => league !== null);
+    },
+    []
+  )
+);
+
+const supportedSportsCore = cache(async (): Promise<SportsResult<Sport[]>> =>
+  safeResult((provider) => provider.listSports(), [])
+);
+
 /* ------------------------------------------------------------------ */
 /* Public API                                                          */
 /* ------------------------------------------------------------------ */
@@ -209,6 +234,23 @@ export async function getEventStatisticsWithStatus(
   eventId: string
 ): Promise<SportsResult<MatchStatistics | null>> {
   return statisticsCore(eventId);
+}
+
+/** Curated popular leagues, resolved from live provider metadata. */
+export async function getPopularLeagues(): Promise<SportsResult<League[]>> {
+  return popularLeaguesCore();
+}
+
+/**
+ * True when the provider covers this sport. Unsupported sports render an
+ * honest "coming soon" state instead of empty-looking results.
+ */
+export async function isSportSupported(sport: SportSlug): Promise<boolean> {
+  const result = await supportedSportsCore();
+  return (
+    result.status === "ok" &&
+    result.data.some((s) => s.slug.toLowerCase() === sport.toLowerCase())
+  );
 }
 
 /* Convenience wrappers matching the original simple signatures. */

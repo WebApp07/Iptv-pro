@@ -142,6 +142,26 @@ const RSS_POSTS_QUERY = groq`*[${INDEXABLE_FILTER}] | order(publishedAt desc)[0.
   updatedAt
 }`;
 
+/**
+ * Blog articles related to sports topics, for the Sports Hub's
+ * "related content" section. Matches on editor tags/keywords or sporty
+ * titles; returns [] when nothing qualifies so the section can be omitted.
+ */
+const SPORTS_RELATED_POSTS_QUERY = groq`*[
+  ${INDEXABLE_FILTER}
+  && (
+    count(tags[@ in $tags]) > 0
+    || count(seoKeywords[@ in $tags]) > 0
+    || (defined(focusKeyword) && focusKeyword in $tags)
+    || title match "football*"
+    || title match "soccer*"
+    || title match "sport*"
+    || title match "champions league*"
+    || title match "premier league*"
+    || title match "watch *"
+  )
+] | order(publishedAt desc)[0...3] ${postsProjection}`;
+
 export async function getPosts(): Promise<PostCard[]> {
   return sanityFetch({ query: POSTS_QUERY, revalidate: 60 });
 }
@@ -260,6 +280,31 @@ export async function getRssPosts(limit = 50): Promise<RssPost[]> {
     query: RSS_POSTS_QUERY,
     params: { limit },
     revalidate: 3600,
+  });
+}
+
+export async function getSportsRelatedPosts(): Promise<PostCard[]> {
+  const tags: QueryParams = {
+    tags: [
+      "football",
+      "soccer",
+      "sports",
+      "nba",
+      "basketball",
+      "tennis",
+      "hockey",
+      "mma",
+      "ufc",
+      "fifa",
+      "world cup",
+      "champions league",
+      "premier league",
+    ],
+  };
+  return sanityFetch({
+    query: SPORTS_RELATED_POSTS_QUERY,
+    params: tags,
+    revalidate: 300,
   });
 }
 

@@ -2,21 +2,32 @@ import { MatchCard, SportsNotice } from "@/components/sports/match-card";
 import {
   getLiveEventsWithStatus,
   isSportsDataConfigured,
+  isSportSupported,
   type SportsResult,
 } from "@/lib/sports";
-import type { Match } from "@/lib/sports";
+import type { Match, SportSlug } from "@/lib/sports";
 
 const NOT_CONFIGURED: SportsResult<Match[]> = {
   data: [],
   status: "not-configured",
 };
 
-export async function LiveEvents({ limit = 10 }: { limit?: number }) {
-  // Server component: fetches at the server boundary. The underlying query
-  // is cached and deduplicated, so multiple mounts share one lookup.
-  const result = isSportsDataConfigured()
-    ? await getLiveEventsWithStatus({ limit })
-    : NOT_CONFIGURED;
+export async function LiveEvents({
+  limit = 10,
+  sport,
+}: {
+  limit?: number;
+  sport?: SportSlug;
+}) {
+  // Unsupported sports render an honest coming-soon state - no wasted
+  // provider calls and no empty-looking results.
+  const supported =
+    !sport || sport === "all" ? true : await isSportSupported(sport);
+  const result = !isSportsDataConfigured()
+    ? NOT_CONFIGURED
+    : !supported
+      ? ({ data: [], status: "ok" } as SportsResult<Match[]>)
+      : await getLiveEventsWithStatus({ limit });
 
   return (
     <section aria-labelledby="live-events-heading">
@@ -43,10 +54,17 @@ export async function LiveEvents({ limit = 10 }: { limit?: number }) {
             body="We couldn't reach the sports service just now. It usually recovers within minutes - please check back shortly."
           />
         ) : result.data.length === 0 ? (
-          <SportsNotice
-            title="No live matches right now"
-            body="Nothing is being played at this moment. Upcoming fixtures are listed below."
-          />
+          sport && sport !== "all" ? (
+            <SportsNotice
+              title={`${sport.charAt(0).toUpperCase()}${sport.slice(1)} coverage coming soon`}
+              body="We don't have schedules for this sport yet. Football is covered today."
+            />
+          ) : (
+            <SportsNotice
+              title="No live matches right now"
+              body="Nothing is being played at this moment. Upcoming fixtures are listed below."
+            />
+          )
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {result.data.map((match) => (

@@ -1,7 +1,9 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 import type { Match } from "@/lib/sports";
 
-function formatKickoff(iso: string): string {
+/** Deterministic UTC kickoff label, e.g. "Sat 29 Aug · 16:30". */
+export function formatKickoff(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
   // Rendered deterministically in UTC so every visitor sees the same time;
@@ -15,6 +17,21 @@ function formatKickoff(iso: string): string {
     hour12: false,
     timeZone: "UTC",
   }).format(date);
+}
+
+export function formatKickoffTime(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function titleCase(slug: string): string {
+  return slug.charAt(0).toUpperCase() + slug.slice(1);
 }
 
 function StatusPill({ match }: { match: Match }) {
@@ -33,7 +50,11 @@ function StatusPill({ match }: { match: Match }) {
       </span>
     );
   }
-  if (match.status === "postponed" || match.status === "canceled" || match.status === "suspended") {
+  if (
+    match.status === "postponed" ||
+    match.status === "canceled" ||
+    match.status === "suspended"
+  ) {
     return (
       <span className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-medium capitalize text-muted">
         {match.status}
@@ -76,7 +97,9 @@ function TeamRow({
       )}
       <span
         className={
-          bold ? "truncate text-sm font-semibold text-foreground" : "truncate text-sm text-muted"
+          bold
+            ? "truncate text-sm font-semibold text-foreground"
+            : "truncate text-sm text-muted"
         }
       >
         {team.name}
@@ -90,12 +113,19 @@ function TeamRow({
   );
 }
 
-export function MatchCard({ match }: { match: Match }) {
+export function MatchCard({
+  match,
+  details,
+}: {
+  match: Match;
+  /** Optional expandable detail block (e.g. venue/round), rendered zero-JS. */
+  details?: ReactNode;
+}) {
   const hasScore = match.score && (match.score.home != null || match.score.away != null);
   const showScore = match.status !== "scheduled" && hasScore;
 
   return (
-    <article className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-[#ffd166]/40 sm:p-5">
+    <article className="flex flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-[#ffd166]/40 sm:p-5">
       <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
         {match.leagueName ? (
           <span className="truncate text-xs font-medium uppercase tracking-[0.14em] text-muted">
@@ -107,27 +137,59 @@ export function MatchCard({ match }: { match: Match }) {
         <StatusPill match={match} />
       </div>
 
-      <div className="mt-4 space-y-3">
-        <TeamRow team={match.homeTeam} score={showScore ? match.score?.home : undefined} bold={match.score?.home != null && match.score.home > (match.score.away ?? 0)} />
-        <TeamRow team={match.awayTeam} score={showScore ? match.score?.away : undefined} bold={match.score?.away != null && match.score.away > (match.score.home ?? 0)} />
+      <div className="mt-4 flex-1 space-y-3">
+        <TeamRow
+          team={match.homeTeam}
+          score={showScore ? match.score?.home : undefined}
+          bold={
+            match.score?.home != null &&
+            match.score.home > (match.score.away ?? 0)
+          }
+        />
+        <TeamRow
+          team={match.awayTeam}
+          score={showScore ? match.score?.away : undefined}
+          bold={
+            match.score?.away != null &&
+            match.score.away > (match.score.home ?? 0)
+          }
+        />
       </div>
 
-      {match.venue?.name ? (
-        <p className="mt-4 truncate border-t border-border pt-3 text-xs text-muted">
-          {match.venue.name}
-          {match.venue.city ? `, ${match.venue.city}` : ""}
-        </p>
-      ) : null}
+      {(match.venue?.name || details) && (
+        <div className="mt-4 border-t border-border pt-3">
+          {match.venue?.name ? (
+            <p className="truncate text-xs text-muted">
+              {match.venue.name}
+              {match.venue.city ? `, ${match.venue.city}` : ""}
+            </p>
+          ) : null}
+          {details ? <div className={match.venue?.name ? "mt-3" : ""}>{details}</div> : null}
+        </div>
+      )}
+
+      <p className="mt-3 text-[11px] uppercase tracking-[0.14em] text-muted">
+        {titleCase(match.sportId)}
+      </p>
     </article>
   );
 }
 
-/** Shared notice styles for the section states below. */
-export function SportsNotice({ title, body }: { title: string; body: string }) {
+/** Shared notice styles for section states. */
+export function SportsNotice({
+  title,
+  body,
+  children,
+}: {
+  title: string;
+  body: string;
+  children?: ReactNode;
+}) {
   return (
     <div className="rounded-2xl border border-border bg-card px-6 py-16 text-center">
       <h3 className="font-display text-xl font-bold">{title}</h3>
       <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted">{body}</p>
+      {children ? <div className="mt-5">{children}</div> : null}
     </div>
   );
 }

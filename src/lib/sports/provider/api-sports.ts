@@ -369,6 +369,23 @@ export function createApiSportsProvider(options?: {
       return options?.limit ? leagues.slice(0, options.limit) : leagues;
     },
 
+    async getLeagueById(id) {
+      if (!/^\d+$/.test(id)) return null;
+      const apiKey = process.env.SPORTS_API_KEY;
+      if (!apiKey) return null;
+      const rows = await request<{
+        league: { id?: number; name?: string; country?: string; logo?: string; season?: number };
+      }>(
+        "/leagues",
+        { id },
+        apiKey,
+        timeoutMs,
+        SPORTS_CACHE_TTL.league
+      );
+      const first = rows[0];
+      return first ? mapLeague(first.league ?? {}) : null;
+    },
+
     async getLiveEvents(options) {
       const events = await fixtures({ live: "all" }, SPORTS_CACHE_TTL.live);
       return options?.limit ? events.slice(0, options.limit) : events;
