@@ -5,12 +5,20 @@
  * be imported from Server Components / Route Handlers. Never import it from
  * a "use client" module.
  *
- * Public functions never throw for expected failures (missing key, provider
- * outage, timeout, empty data) - they log server-side and return empty
- * results so pages can render honest empty states. No placeholder/fake
- * fixtures are ever produced.
+ * Caching strategy (two layers):
+ * 1. Cross-request: the provider adapter sets `fetch(url, { next: { revalidate }})`
+ *    per data kind - live 30s, upcoming 5min, leagues 24h, single event 2min.
+ *    Identical requests are served from Next's Data Cache until stale.
+ * 2. Within a render pass: every query is wrapped in React `cache()` keyed on
+ *    primitive arguments, so multiple components asking for the same data in
+ *    one page share a single lookup (and a single provider mapping pass).
+ *
+ * Failures never throw for expected conditions (missing key, outage, timeout,
+ * quota). Queries return a status so UI can distinguish "nothing scheduled"
+ * from "temporarily unavailable". No placeholder fixtures are ever produced.
  */
 
+import { cache } from "react";
 import type {
   EventQueryOptions,
   League,
@@ -23,9 +31,23 @@ import { SportsProviderError } from "./errors";
 import type { SportsProvider } from "./provider/types";
 import { createApiSportsProvider } from "./provider/api-sports";
 
-export type { EventQueryOptions, League, Match, MatchStatistics, Sport, SportSlug } from "./types";
+export type {
+  EventQueryOptions,
+  League,
+  Match,
+  MatchStatistics,
+  Sport,
+  SportSlug,
+} from "./types";
 
 const PROVIDER_TIMEOUT_MS = Number(process.env.SPORTS_API_TIMEOUT_MS) || 8_000;
+
+/** Outcome of a sports query, letting UI render honest empty vs error states. */
+export interface SportsResult<T> {
+  data: T;
+  /** "ok" = real response (may still be empty). */
+  status: "ok" | "unavailable" | "not-configured";
+}
 
 let cachedProvider: SportsProvider | null = null;
 
@@ -42,7 +64,7 @@ function getProvider(): SportsProvider {
   return cachedProvider;
 }
 
-/** True when credentials exist - use it to pick between data and empty state. */
+/** True when credentials exist - use it to pick between data and setup state. */
 export function isSportsDataConfigured(): boolean {
   try {
     return getProvider().isConfigured();
@@ -51,87 +73,184 @@ export function isSportsDataConfigured(): boolean {
   }
 }
 
-/**
- * Wraps a provider call so expected failures degrade to fallback values.
- * Unexpected errors still surface (they indicate bugs, not outages).
- */
-async function safeCall<T>(
-  operation: () => Promise<T>,
+async function safeResult<T>(
+  operation: (provider: SportsProvider) => Promise<T>,
   fallback: T
-): Promise<T> {
+): Promise<SportsResult<T>> {
   let provider: SportsProvider;
   try {
     provider = getProvider();
   } catch (error) {
     console.error("[sports]", error instanceof Error ? error.message : error);
-    return fallback;
+    return { data: fallback, status: "not-configured" };
   }
 
   if (!provider.isConfigured()) {
-    return fallback;
+    return { data: fallback, status: "not-configured" };
   }
 
   try {
-    return await operation();
+    return { data: await operation(provider), status: "ok" };
   } catch (error) {
     if (error instanceof SportsProviderError) {
-      // Expected operational failure: outage, timeout, quota. Logged and swallowed.
+      // Expected operational failure: outage, timeout, quota.
       console.error(`[sports] ${error.message}`);
-      return fallback;
+      return { data: fallback, status: "unavailable" };
     }
     throw error;
   }
 }
 
 /* ------------------------------------------------------------------ */
+/* Cached internals - primitive keys keep dedupe reliable              */
+/* ------------------------------------------------------------------ */
+
+const liveCore = cache(async (limit?: number): Promise<SportsResult<Match[]>> =>
+  safeResult(
+    async (provider) => {
+      const events = await provider.getLiveEvents(limit ? { limit } : undefined);
+      return limit ? events.slice(0, limit) : events;
+    },
+    []
+  )
+);
+
+const upcomingCore = cache(
+  async (limit?: number, date?: string): Promise<SportsResult<Match[]>> =>
+    safeResult(async (provider) => provider.getUpcomingEvents({ limit, date }), [])
+);
+
+const eventByIdCore = cache(
+  async (id: string): Promise<SportsResult<Match | null>> =>
+    safeResult(async (provider) => provider.getEventById(id), null)
+);
+
+const bySportCore = cache(
+  async (
+    sport: SportSlug,
+    limit?: number,
+    date?: string
+  ): Promise<SportsResult<Match[]>> =>
+    safeResult(async (provider) => provider.getEventsBySport(sport, { limit, date }), [])
+);
+
+const leagueEventsCore = cache(
+  async (
+    leagueId: string,
+    limit?: number,
+    date?: string
+  ): Promise<SportsResult<Match[]>> =>
+    safeResult(
+      async (provider) => provider.getLeagueEvents(leagueId, { limit, date }),
+      []
+    )
+);
+
+const leaguesCore = cache(
+  async (
+    sport: SportSlug | undefined,
+    limit?: number
+  ): Promise<SportsResult<League[]>> =>
+    safeResult(async (provider) => provider.getLeagues({ sport, limit }), [])
+);
+
+const statisticsCore = cache(
+  async (eventId: string): Promise<SportsResult<MatchStatistics | null>> =>
+    safeResult(
+      async (provider) =>
+        provider.getEventStatistics ? provider.getEventStatistics(eventId) : null,
+      null
+    )
+);
+
+/* ------------------------------------------------------------------ */
 /* Public API                                                          */
 /* ------------------------------------------------------------------ */
 
-export async function listSupportedSports(): Promise<Sport[]> {
-  return safeCall(() => getProvider().listSports(), []);
+export async function getLiveEventsWithStatus(
+  options?: Pick<EventQueryOptions, "limit">
+): Promise<SportsResult<Match[]>> {
+  return liveCore(options?.limit);
 }
 
-export async function getLeagues(
+export async function getUpcomingEventsWithStatus(
+  options?: EventQueryOptions
+): Promise<SportsResult<Match[]>> {
+  return upcomingCore(options?.limit, options?.date);
+}
+
+export async function getEventByIdWithStatus(
+  id: string
+): Promise<SportsResult<Match | null>> {
+  return eventByIdCore(id);
+}
+
+export async function getEventsBySportWithStatus(
+  sport: SportSlug,
+  options?: EventQueryOptions
+): Promise<SportsResult<Match[]>> {
+  return bySportCore(sport, options?.limit, options?.date);
+}
+
+export async function getLeagueEventsWithStatus(
+  leagueId: string,
+  options?: EventQueryOptions
+): Promise<SportsResult<Match[]>> {
+  return leagueEventsCore(leagueId, options?.limit, options?.date);
+}
+
+export async function getLeaguesWithStatus(
   options?: { sport?: SportSlug; limit?: number }
-): Promise<League[]> {
-  return safeCall(() => getProvider().getLeagues(options), []);
+): Promise<SportsResult<League[]>> {
+  return leaguesCore(options?.sport, options?.limit);
 }
 
-export async function getLiveEvents(
-  options?: EventQueryOptions
-): Promise<Match[]> {
-  return safeCall(() => getProvider().getLiveEvents(options), []);
+export async function getEventStatisticsWithStatus(
+  eventId: string
+): Promise<SportsResult<MatchStatistics | null>> {
+  return statisticsCore(eventId);
 }
 
-export async function getUpcomingEvents(
-  options?: EventQueryOptions
-): Promise<Match[]> {
-  return safeCall(() => getProvider().getUpcomingEvents(options), []);
+/* Convenience wrappers matching the original simple signatures. */
+
+export async function listSupportedSports(): Promise<Sport[]> {
+  return safeResult((provider) => provider.listSports(), []).then((r) => r.data);
+}
+
+export async function getLiveEvents(options?: EventQueryOptions): Promise<Match[]> {
+  return (await getLiveEventsWithStatus(options)).data;
+}
+
+export async function getUpcomingEvents(options?: EventQueryOptions): Promise<Match[]> {
+  return (await getUpcomingEventsWithStatus(options)).data;
 }
 
 export async function getEventById(id: string): Promise<Match | null> {
-  return safeCall(async () => getProvider().getEventById(id), null);
+  return (await getEventByIdWithStatus(id)).data;
 }
 
 export async function getEventsBySport(
   sport: SportSlug,
   options?: EventQueryOptions
 ): Promise<Match[]> {
-  return safeCall(() => getProvider().getEventsBySport(sport, options), []);
+  return (await getEventsBySportWithStatus(sport, options)).data;
 }
 
 export async function getLeagueEvents(
   leagueId: string,
   options?: EventQueryOptions
 ): Promise<Match[]> {
-  return safeCall(() => getProvider().getLeagueEvents(leagueId, options), []);
+  return (await getLeagueEventsWithStatus(leagueId, options)).data;
+}
+
+export async function getLeagues(
+  options?: { sport?: SportSlug; limit?: number }
+): Promise<League[]> {
+  return (await getLeaguesWithStatus(options)).data;
 }
 
 export async function getEventStatistics(
   eventId: string
 ): Promise<MatchStatistics | null> {
-  return safeCall(async () => {
-    const provider = getProvider();
-    return provider.getEventStatistics ? provider.getEventStatistics(eventId) : null;
-  }, null);
+  return (await getEventStatisticsWithStatus(eventId)).data;
 }

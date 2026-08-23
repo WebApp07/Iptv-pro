@@ -7,6 +7,7 @@ import type {
   Sport,
   Team,
 } from "../types";
+import { SPORTS_CACHE_TTL } from "../cache";
 import {
   SportsProviderError,
   SportsTimeoutError,
@@ -247,7 +248,8 @@ async function request<T>(
   endpoint: string,
   params: Record<string, string | number | undefined>,
   apiKey: string,
-  timeoutMs: number
+  timeoutMs: number,
+  revalidate: number
 ): Promise<T[]> {
   const url = new URL(endpoint, resolveHost());
   for (const [key, value] of Object.entries(params)) {
@@ -260,7 +262,10 @@ async function request<T>(
     const res = await fetch(url.toString(), {
       headers: { "x-apisports-key": apiKey },
       signal: controller.signal,
-      cache: "no-store",
+      // Data Cache window for this data kind. Next also memoizes identical
+      // GET requests within a single render pass, so multiple components
+      // asking for the same data trigger exactly one upstream call.
+      next: { revalidate },
     });
 
     if (!res.ok) {
@@ -315,11 +320,18 @@ export function createApiSportsProvider(options?: {
   const timeoutMs = options?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   async function fixtures(
-    params: Record<string, string | number | undefined>
+    params: Record<string, string | number | undefined>,
+    revalidate: number
   ): Promise<Match[]> {
     const apiKey = process.env.SPORTS_API_KEY;
     if (!apiKey) return [];
-    const rows = await request<ApiFixture>("/fixtures", params, apiKey, timeoutMs);
+    const rows = await request<ApiFixture>(
+      "/fixtures",
+      params,
+      apiKey,
+      timeoutMs,
+      revalidate
+    );
     return rows
       .map(mapFixture)
       .filter((match): match is Match => match !== null);
@@ -348,7 +360,8 @@ export function createApiSportsProvider(options?: {
           type: "league",
         },
         apiKey,
-        timeoutMs
+        timeoutMs,
+        SPORTS_CACHE_TTL.league
       );
       const leagues = rows
         .map((row) => mapLeague(row.league ?? {}))
@@ -357,20 +370,23 @@ export function createApiSportsProvider(options?: {
     },
 
     async getLiveEvents(options) {
-      const events = await fixtures({ live: "all" });
+      const events = await fixtures({ live: "all" }, SPORTS_CACHE_TTL.live);
       return options?.limit ? events.slice(0, options.limit) : events;
     },
 
     async getUpcomingEvents(options) {
-      const events = await fixtures({
-        next: options?.limit ?? DEFAULT_LIMIT,
-        ...(options?.date ? { date: options.date } : {}),
-      });
+      const events = await fixtures(
+        {
+          next: options?.limit ?? DEFAULT_LIMIT,
+          ...(options?.date ? { date: options.date } : {}),
+        },
+        SPORTS_CACHE_TTL.upcoming
+      );
       return events.filter((event) => event.status === "scheduled");
     },
 
     async getEventById(id) {
-      const events = await fixtures({ id });
+      const events = await fixtures({ id }, SPORTS_CACHE_TTL.event);
       return events[0] ?? null;
     },
 
@@ -379,23 +395,32 @@ export function createApiSportsProvider(options?: {
       // sports are reported as empty rather than throwing, so pages can
       // render an empty state.
       if (sport !== SUPPORTED_SPORT.slug) return [];
-      const events = await fixtures({
-        date: options?.date,
-        ...(options?.date ? {} : { live: "all" }),
-      });
+      const events = await fixtures(
+        {
+          date: options?.date,
+          ...(options?.date ? {} : { live: "all" }),
+        },
+        options?.date ? SPORTS_CACHE_TTL.upcoming : SPORTS_CACHE_TTL.live
+      );
       return options?.limit ? events.slice(0, options.limit) : events;
     },
 
     async getLeagueEvents(leagueId, options) {
       if (options?.date) {
-        return fixtures({ league: leagueId, season: currentSeasonYear(), date: options.date });
+        return fixtures(
+          { league: leagueId, season: currentSeasonYear(), date: options.date },
+          SPORTS_CACHE_TTL.upcoming
+        );
       }
       // Without a date, ask for the league's next fixtures directly.
-      return fixtures({
-        league: leagueId,
-        season: currentSeasonYear(),
-        next: options?.limit ?? DEFAULT_LIMIT,
-      });
+      return fixtures(
+        {
+          league: leagueId,
+          season: currentSeasonYear(),
+          next: options?.limit ?? DEFAULT_LIMIT,
+        },
+        SPORTS_CACHE_TTL.upcoming
+      );
     },
 
     async getEventStatistics(eventId) {
@@ -405,13 +430,17 @@ export function createApiSportsProvider(options?: {
         "/fixtures/statistics",
         { fixture: eventId },
         apiKey,
-        timeoutMs
+        timeoutMs,
+        SPORTS_CACHE_TTL.event
       );
       return mapStatistics(String(eventId), rows);
     },
 
     async getHeadToHead(teamA, teamB, limit = 5) {
-      return fixtures({ h2h: `${teamA}-${teamB}`, last: limit });
+      return fixtures(
+        { h2h: `${teamA}-${teamB}`, last: limit },
+        SPORTS_CACHE_TTL.event
+      );
     },
 
     async getTeamForm() {
