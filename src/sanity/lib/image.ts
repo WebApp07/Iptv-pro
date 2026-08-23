@@ -1,16 +1,16 @@
-import imageUrlBuilder from "@sanity/image-url";
+import { createImageUrlBuilder } from "@sanity/image-url";
 import { getClient } from "./client";
 import type { SanityImage } from "./types";
 
-let builder: ReturnType<typeof createImageBuilder> | null = null;
+let builder: ReturnType<typeof createImageUrlBuilder> | null = null;
 
-function createImageBuilder() {
-  return imageUrlBuilder(getClient());
+function getBuilder() {
+  if (!builder) {
+    builder = createImageUrlBuilder(getClient());
+  }
+  return builder;
 }
 
 export function urlFor(source: SanityImage) {
-  if (!builder) {
-    builder = createImageBuilder();
-  }
-  return builder.image(source);
+  return getBuilder().image(source);
 }

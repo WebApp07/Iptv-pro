@@ -8,13 +8,15 @@ import { siteConfig, siteUrl } from "@/config/site";
 import { cn } from "@/lib/utils";
 import {
   getCategories,
-  getPostsByCategoryCount,
-  getPostsByCategoryPage,
+  getFeaturedPost,
   getPostsCount,
   getPostsPage,
 } from "@/sanity/lib/queries";
+import type { PostCard as PostCardType } from "@/sanity/lib/types";
 
 const POSTS_PER_PAGE = 6;
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -22,6 +24,9 @@ export const metadata: Metadata = {
     "Plain-language guides on IPTV, streaming devices, troubleshooting and entertainment. No jargon, just answers that actually help.",
   alternates: {
     canonical: siteUrl("/blog"),
+    types: {
+      "application/rss+xml": siteUrl("/blog/rss.xml"),
+    },
   },
   openGraph: {
     title: `Blog | ${siteConfig.name}`,
@@ -61,48 +66,53 @@ function paginationRange(current: number, total: number): number[] {
   return pages;
 }
 
+async function loadBlogPage(requestedPage: number): Promise<{
+  featured?: PostCardType;
+  posts: PostCardType[];
+  totalPages: number;
+}> {
+  const totalCount = await getPostsCount();
+  if (totalCount === 0) return { posts: [], totalPages: 1 };
+
+  // The newest post is the featured card on page 1 and is skipped in the grid.
+  const totalPages = Math.max(1, Math.ceil((totalCount - 1) / POSTS_PER_PAGE));
+  const currentPage = Math.min(requestedPage, totalPages);
+
+  if (currentPage > 1) {
+    const posts = await getPostsPage(
+      1 + (currentPage - 1) * POSTS_PER_PAGE,
+      POSTS_PER_PAGE
+    );
+    return { posts, totalPages };
+  }
+
+  const [featured, posts] = await Promise.all([
+    getFeaturedPost(),
+    getPostsPage(0, POSTS_PER_PAGE + 1),
+  ]);
+
+  return {
+    featured: featured ?? undefined,
+    posts: posts.filter((post) => post.slug !== featured?.slug),
+    totalPages,
+  };
+}
+
 export default async function BlogPage({
   searchParams,
 }: {
   searchParams: Promise<{ category?: string; page?: string }>;
 }) {
-  const { category, page: pageParam } = await searchParams;
-  const categories = await getCategories();
-  const categorySlugs = categories.map((category) => category.slug);
-  const activeCategory =
-    category && categorySlugs.includes(category) ? category : undefined;
+  const { page: pageParam } = await searchParams;
+
+  // Note: legacy ?category=<slug> links are redirected server-side to
+  // /blog/category/<slug> in src/proxy.ts before this page renders.
+
   const requestedPage = Math.max(1, Number(pageParam) || 1);
-
-  let featured;
-  let posts;
-  let totalCount;
-  let totalPages;
-
-  if (activeCategory) {
-    totalCount = await getPostsByCategoryCount(activeCategory);
-    totalPages = Math.max(1, Math.ceil(totalCount / POSTS_PER_PAGE));
-    const currentPage = Math.min(requestedPage, totalPages);
-    posts = await getPostsByCategoryPage(
-      activeCategory,
-      (currentPage - 1) * POSTS_PER_PAGE,
-      POSTS_PER_PAGE
-    );
-  } else {
-    totalCount = await getPostsCount();
-    // The newest post is the featured card on the first page.
-    totalPages = Math.max(1, Math.ceil((totalCount - 1) / POSTS_PER_PAGE));
-    const currentPage = Math.min(requestedPage, totalPages);
-    const offset =
-      currentPage === 1 ? 0 : 1 + (currentPage - 1) * POSTS_PER_PAGE;
-    const limit = currentPage === 1 ? POSTS_PER_PAGE + 1 : POSTS_PER_PAGE;
-    const pagePosts = await getPostsPage(offset, limit);
-    if (currentPage === 1 && pagePosts.length > 0) {
-      [featured, ...posts] = pagePosts;
-    } else {
-      posts = pagePosts;
-    }
-  }
-
+  const [categories, { featured, posts, totalPages }] = await Promise.all([
+    getCategories(),
+    loadBlogPage(requestedPage),
+  ]);
   const currentPage = Math.min(requestedPage, totalPages);
   const hasPrevious = currentPage > 1;
   const hasNext = currentPage < totalPages;
@@ -141,62 +151,62 @@ export default async function BlogPage({
           >
             <Link
               href="/blog"
-              className={cn(
-                "inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
-                !activeCategory
-                  ? "border-[#ffd166] bg-[#ffd166] text-black"
-                  : "border-border text-muted hover:border-[#ffd166]/40 hover:text-foreground"
-              )}
+              aria-current="page"
+              className="inline-flex items-center rounded-full border border-[#ffd166] bg-[#ffd166] px-4 py-1.5 text-sm font-medium text-black"
             >
               All posts
             </Link>
-            {categories.map((category) => (
+            {categories.map((item) => (
               <Link
-                key={category.slug}
-                href={`/blog?category=${encodeURIComponent(category.slug)}`}
-                className={cn(
-                  "inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
-                  activeCategory === category.slug
-                    ? "border-[#ffd166] bg-[#ffd166] text-black"
-                    : "border-border text-muted hover:border-[#ffd166]/40 hover:text-foreground"
-                )}
+                key={item.slug}
+                href={`/blog/category/${item.slug}`}
+                className="inline-flex items-center rounded-full border border-border px-4 py-1.5 text-sm font-medium text-muted transition-colors hover:border-[#ffd166]/40 hover:text-foreground"
               >
-                {category.title}
+                {item.title}
               </Link>
             ))}
+            <Link
+              href="/blog/search"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-muted transition-colors hover:border-[#ffd166]/40 hover:text-foreground"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-3.5 w-3.5"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              Search
+            </Link>
           </nav>
         </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
-        {posts.length === 0 && !featured ? (
+        {!featured && posts.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card px-6 py-20 text-center">
             <h2 className="font-display text-2xl font-bold">
               No articles here yet
             </h2>
             <p className="mx-auto mt-3 max-w-md text-muted">
-              {activeCategory
-                ? `There are no published posts in ${activeCategory} right now.`
-                : "The first post is on its way. Check back soon."}
+              The first post is on its way. Check back soon.
             </p>
-            {activeCategory ? (
-              <Link
-                href="/blog"
-                className="mt-6 inline-block text-sm font-medium text-[#ffd166] hover:text-[#f4c255]"
-              >
-                Show all posts
-              </Link>
-            ) : null}
           </div>
         ) : (
           <>
-            {!activeCategory && featured ? <FeaturedPost post={featured} /> : null}
+            {featured ? <FeaturedPost post={featured} /> : null}
 
             {posts.length > 0 ? (
               <div
                 className={cn(
                   "grid gap-6 sm:grid-cols-2 lg:grid-cols-3",
-                  !activeCategory && featured ? "mt-10" : ""
+                  featured ? "mt-10" : ""
                 )}
               >
                 {posts.map((post) => (
@@ -213,12 +223,9 @@ export default async function BlogPage({
             className="mt-14 flex items-center justify-center gap-2"
           >
             <Link
-              href={
-                activeCategory
-                  ? `/blog?category=${encodeURIComponent(activeCategory)}&page=${currentPage - 1}`
-                  : `/blog?page=${currentPage - 1}`
-              }
+              href={`/blog?page=${currentPage - 1}`}
               aria-disabled={!hasPrevious}
+              rel="prev"
               className={cn(
                 buttonVariants({ variant: "outline", size: "sm" }),
                 "gap-1 border-border text-muted hover:text-foreground",
@@ -243,11 +250,7 @@ export default async function BlogPage({
             {paginationRange(currentPage, totalPages).map((page) => (
               <Link
                 key={page}
-                href={
-                  activeCategory
-                    ? `/blog?category=${encodeURIComponent(activeCategory)}&page=${page}`
-                    : `/blog?page=${page}`
-                }
+                href={page === 1 ? "/blog" : `/blog?page=${page}`}
                 aria-current={page === currentPage ? "page" : undefined}
                 className={cn(
                   "inline-flex h-9 min-w-9 items-center justify-center rounded-full border px-3 text-sm font-medium transition-colors",
@@ -261,12 +264,9 @@ export default async function BlogPage({
             ))}
 
             <Link
-              href={
-                activeCategory
-                  ? `/blog?category=${encodeURIComponent(activeCategory)}&page=${currentPage + 1}`
-                  : `/blog?page=${currentPage + 1}`
-              }
+              href={`/blog?page=${currentPage + 1}`}
               aria-disabled={!hasNext}
+              rel="next"
               className={cn(
                 buttonVariants({ variant: "outline", size: "sm" }),
                 "gap-1 border-border text-muted hover:text-foreground",

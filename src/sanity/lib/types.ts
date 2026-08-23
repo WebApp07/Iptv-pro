@@ -13,6 +13,13 @@ export interface SanityImage {
   crop?: { top: number; bottom: number; left: number; right: number };
 }
 
+export interface FaqItem {
+  _type: "faqItem";
+  _key?: string;
+  question: string;
+  answer: string;
+}
+
 export interface Category {
   _id: string;
   title: string;
@@ -51,10 +58,36 @@ export interface Post extends PostCard {
   seoTitle?: string;
   seoDescription?: string;
   seoKeywords?: string[];
+  focusKeyword?: string;
+  secondaryKeywords?: string[];
+  canonicalUrl?: string;
+  noIndex?: boolean;
   openGraphImage?: SanityImage;
+  tags?: string[];
+  faq?: FaqItem[];
+  relatedPosts?: PostCard[];
 }
 
 export interface PostSlug {
   slug: string;
   publishedAt?: string;
+  updatedAt?: string;
+}
+
+export interface CategoryDetail extends Category {
+  seoTitle?: string;
+  seoDescription?: string;
+  image?: SanityImage;
+}
+
+export interface CategorySlug {
+  slug: string;
+}
+
+export interface RssPost {
+  title: string;
+  slug: string;
+  excerpt: string;
+  publishedAt: string;
+  updatedAt?: string;
 }

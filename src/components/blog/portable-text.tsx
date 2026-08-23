@@ -52,18 +52,32 @@ function CodeBlock({
   );
 }
 
-const components: PortableTextComponents = {
+const components = (
+  headingIds: Record<string, string>
+): PortableTextComponents => ({
   block: {
-    h2: ({ children }) => (
-      <h2 className="mt-12 scroll-mt-24 font-display text-2xl font-bold tracking-tight sm:text-3xl">
-        {children}
-      </h2>
-    ),
-    h3: ({ children }) => (
-      <h3 className="mt-9 scroll-mt-24 font-display text-xl font-bold tracking-tight sm:text-2xl">
-        {children}
-      </h3>
-    ),
+    h2: ({ value, children }) => {
+      const id = value?._key ? headingIds[value._key] : undefined;
+      return (
+        <h2
+          id={id}
+          className="mt-12 scroll-mt-24 font-display text-2xl font-bold tracking-tight sm:text-3xl"
+        >
+          {children}
+        </h2>
+      );
+    },
+    h3: ({ value, children }) => {
+      const id = value?._key ? headingIds[value._key] : undefined;
+      return (
+        <h3
+          id={id}
+          className="mt-9 scroll-mt-24 font-display text-xl font-bold tracking-tight sm:text-2xl"
+        >
+          {children}
+        </h3>
+      );
+    },
     h4: ({ children }) => (
       <h4 className="mt-7 scroll-mt-24 font-heading text-lg font-semibold">
         {children}
@@ -128,16 +142,18 @@ const components: PortableTextComponents = {
       value: { code?: string; language?: string; filename?: string };
     }) => <CodeBlock value={value} />,
   },
-};
+});
 
 export function PortableTextContent({
   value,
+  headingIds = {},
 }: {
   value: Parameters<typeof PortableText>[0]["value"];
+  headingIds?: Record<string, string>;
 }) {
   return (
     <div className="text-base leading-relaxed sm:text-lg">
-      <PortableText value={value} components={components} />
+      <PortableText value={value} components={components(headingIds)} />
     </div>
   );
 }

@@ -1,6 +1,11 @@
 import type { MetadataRoute } from "next";
 import { siteUrl } from "@/config/site";
-import { getPostSlugs } from "@/sanity/lib/queries";
+import {
+  getCategorySlugs,
+  getPostSlugs,
+} from "@/sanity/lib/queries";
+
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -15,9 +20,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let postRoutes: MetadataRoute.Sitemap = [];
   try {
     const slugs = await getPostSlugs();
-    postRoutes = slugs.map(({ slug, publishedAt }) => ({
+    postRoutes = slugs.map(({ slug, publishedAt, updatedAt }) => ({
       url: siteUrl(`/blog/${slug}`),
-      lastModified: publishedAt ? new Date(publishedAt) : new Date(),
+      // Prefer the editor-set revision date so search engines re-crawl updates.
+      lastModified: updatedAt
+        ? new Date(updatedAt)
+        : publishedAt
+          ? new Date(publishedAt)
+          : new Date(),
       changeFrequency: "monthly",
       priority: 0.7,
     }));
@@ -25,5 +35,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // The blog should never take down the sitemap if Sanity is unreachable.
   }
 
-  return [...staticRoutes, ...postRoutes];
+  let categoryRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const slugs = await getCategorySlugs();
+    categoryRoutes = slugs.map(({ slug }) => ({
+      url: siteUrl(`/blog/category/${slug}`),
+      changeFrequency: "weekly",
+      priority: 0.6,
+    }));
+  } catch {
+    // Same as above - categories are additive, never critical.
+  }
+
+  return [...staticRoutes, ...categoryRoutes, ...postRoutes];
 }

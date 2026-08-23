@@ -1,6 +1,15 @@
-import { groq } from "next-sanity";
+import { groq, type QueryParams } from "next-sanity";
 import { sanityFetch } from "./client";
-import type { Author, Category, Post, PostCard, PostSlug } from "./types";
+import type {
+  Author,
+  Category,
+  CategoryDetail,
+  CategorySlug,
+  Post,
+  PostCard,
+  PostSlug,
+  RssPost,
+} from "./types";
 
 const postsProjection = groq`{
   _id,
@@ -12,6 +21,7 @@ const postsProjection = groq`{
   updatedAt,
   readingTime,
   status,
+  "tags": coalesce(tags, []),
   author->{
     _id,
     name,
@@ -39,7 +49,13 @@ const postProjection = groq`{
   seoTitle,
   seoDescription,
   seoKeywords,
+  focusKeyword,
+  secondaryKeywords,
+  canonicalUrl,
+  noIndex,
   openGraphImage,
+  tags,
+  faq,
   author->{
     _id,
     name,
@@ -52,31 +68,50 @@ const postProjection = groq`{
     _id,
     title,
     "slug": slug.current
-  }
+  },
+  "relatedPosts": relatedPosts[]->${postsProjection}
 }`;
 
-const POSTS_QUERY = groq`*[_type == "post" && status == "published" && defined(slug.current)] | order(publishedAt desc) ${postsProjection}`;
+const PUBLISHED_FILTER = `_type == "post" && status == "published" && defined(slug.current)`;
 
-const POSTS_PAGE_QUERY = groq`*[_type == "post" && status == "published" && defined(slug.current)] | order(publishedAt desc)[$offset...$limit] ${postsProjection}`;
+const POSTS_QUERY = groq`*[${PUBLISHED_FILTER}] | order(publishedAt desc) ${postsProjection}`;
 
-const POSTS_COUNT_QUERY = groq`count(*[_type == "post" && status == "published" && defined(slug.current)])`;
+const POSTS_PAGE_QUERY = groq`*[${PUBLISHED_FILTER}] | order(publishedAt desc)[$offset...$limit] ${postsProjection}`;
 
-const LATEST_POSTS_QUERY = groq`*[_type == "post" && status == "published" && defined(slug.current)] | order(publishedAt desc)[0...$limit] ${postsProjection}`;
+const POSTS_COUNT_QUERY = groq`count(*[${PUBLISHED_FILTER}])`;
 
-const POSTS_BY_CATEGORY_QUERY = groq`*[_type == "post" && status == "published" && defined(slug.current) && references(*[_type == "category" && slug.current == $category]._id)] | order(publishedAt desc) ${postsProjection}`;
+const LATEST_POSTS_QUERY = groq`*[${PUBLISHED_FILTER}] | order(publishedAt desc)[0...$limit] ${postsProjection}`;
 
-const POSTS_BY_CATEGORY_PAGE_QUERY = groq`*[_type == "post" && status == "published" && defined(slug.current) && references(*[_type == "category" && slug.current == $category]._id)] | order(publishedAt desc)[$offset...$limit] ${postsProjection}`;
+const FEATURED_POST_QUERY = groq`*[${PUBLISHED_FILTER}] | order(publishedAt desc)[0] ${postsProjection}`;
 
-const POSTS_BY_CATEGORY_COUNT_QUERY = groq`count(*[_type == "post" && status == "published" && defined(slug.current) && references(*[_type == "category" && slug.current == $category]._id)])`;
+const POSTS_BY_CATEGORY_PAGE_QUERY = groq`*[${PUBLISHED_FILTER} && $category in categories[]->slug.current] | order(publishedAt desc)[$offset...$limit] ${postsProjection}`;
 
-const RELATED_POSTS_QUERY = groq`*[_type == "post" && status == "published" && defined(slug.current) && slug.current != $slug && references(*[_type == "category" && slug.current in $categories]._id)] | order(publishedAt desc)[0...$limit] ${postsProjection}`;
+const POSTS_BY_CATEGORY_COUNT_QUERY = groq`count(*[${PUBLISHED_FILTER} && $category in categories[]->slug.current])`;
+
+const RELATED_POSTS_QUERY = groq`*[
+  ${PUBLISHED_FILTER}
+  && slug.current != $slug
+  && (
+    count(categories[@->slug.current in $categories]) > 0
+    || count(tags[@ in $tags]) > 0
+  )
+] | order(publishedAt desc)[0...$limit] ${postsProjection}`;
 
 const POST_BY_SLUG_QUERY = groq`*[_type == "post" && status == "published" && slug.current == $slug][0] ${postProjection}`;
 
-const POST_SLUGS_QUERY = groq`*[_type == "post" && status == "published" && defined(slug.current)] | order(publishedAt desc) {
+// Posts that ask not to be indexed must stay out of the sitemap and RSS too.
+const INDEXABLE_FILTER = `${PUBLISHED_FILTER} && noIndex != true`;
+
+const POST_SLUGS_QUERY = groq`*[${INDEXABLE_FILTER}] | order(publishedAt desc) {
   "slug": slug.current,
-  publishedAt
+  publishedAt,
+  updatedAt
 }`;
+
+const SEARCH_POSTS_QUERY = groq`*[
+  ${PUBLISHED_FILTER}
+  && (title match $term + "*" || excerpt match $term + "*" || (defined(focusKeyword) && focusKeyword match $term + "*") || count(seoKeywords[@ match $term + "*"]) > 0 || count(coalesce(tags, [])[@ match $term + "*"]) > 0)
+] | order(publishedAt desc)[0...$limit] ${postsProjection}`;
 
 const CATEGORIES_QUERY = groq`*[_type == "category"] | order(title asc) {
   _id,
@@ -85,13 +120,26 @@ const CATEGORIES_QUERY = groq`*[_type == "category"] | order(title asc) {
   description
 }`;
 
-const AUTHORS_QUERY = groq`*[_type == "author"] | order(name asc) {
+const CATEGORY_BY_SLUG_QUERY = groq`*[_type == "category" && slug.current == $slug][0] {
   _id,
-  name,
+  title,
   "slug": slug.current,
-  image,
-  bio,
-  twitter
+  description,
+  seoTitle,
+  seoDescription,
+  image
+}`;
+
+const CATEGORY_SLUGS_QUERY = groq`*[_type == "category" && defined(slug.current)] | order(title asc) {
+  "slug": slug.current
+}`;
+
+const RSS_POSTS_QUERY = groq`*[${INDEXABLE_FILTER}] | order(publishedAt desc)[0...$limit] {
+  title,
+  "slug": slug.current,
+  excerpt,
+  publishedAt,
+  updatedAt
 }`;
 
 export async function getPosts(): Promise<PostCard[]> {
@@ -113,12 +161,14 @@ export async function getPostsCount(): Promise<number> {
   return sanityFetch({ query: POSTS_COUNT_QUERY, revalidate: 60 });
 }
 
-export async function getPostsByCategory(
-  category: string
-): Promise<PostCard[]> {
+export async function getFeaturedPost(): Promise<PostCard | null> {
+  return sanityFetch({ query: FEATURED_POST_QUERY, revalidate: 60 });
+}
+
+export async function getLatestPosts(limit = 3): Promise<PostCard[]> {
   return sanityFetch({
-    query: POSTS_BY_CATEGORY_QUERY,
-    params: { category },
+    query: LATEST_POSTS_QUERY,
+    params: { limit },
     revalidate: 60,
   });
 }
@@ -145,25 +195,34 @@ export async function getPostsByCategoryCount(
   });
 }
 
-export async function getLatestPosts(limit = 3): Promise<PostCard[]> {
-  return sanityFetch({
-    query: LATEST_POSTS_QUERY,
-    params: { limit },
-    revalidate: 60,
-  });
-}
-
 export async function getRelatedPosts(
   slug: string,
   categories: string[],
+  tags: string[],
   limit = 3
 ): Promise<PostCard[]> {
-  if (categories.length === 0) {
+  if (categories.length === 0 && tags.length === 0) {
     return [];
   }
   return sanityFetch({
     query: RELATED_POSTS_QUERY,
-    params: { slug, categories, limit },
+    params: { slug, categories, tags, limit },
+    revalidate: 60,
+  });
+}
+
+export async function searchPosts(query: string, limit = 12): Promise<PostCard[]> {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) {
+    return [];
+  }
+  const params: QueryParams = {
+    term: trimmed.replace(/["*\\]/g, " ").trim(),
+    limit,
+  };
+  return sanityFetch({
+    query: SEARCH_POSTS_QUERY,
+    params,
     revalidate: 60,
   });
 }
@@ -184,6 +243,24 @@ export async function getCategories(): Promise<Category[]> {
   return sanityFetch({ query: CATEGORIES_QUERY, revalidate: 60 });
 }
 
-export async function getAuthors(): Promise<Author[]> {
-  return sanityFetch({ query: AUTHORS_QUERY, revalidate: 60 });
+export async function getCategoryBySlug(slug: string): Promise<CategoryDetail | null> {
+  return sanityFetch({
+    query: CATEGORY_BY_SLUG_QUERY,
+    params: { slug },
+    revalidate: 60,
+  });
 }
+
+export async function getCategorySlugs(): Promise<CategorySlug[]> {
+  return sanityFetch({ query: CATEGORY_SLUGS_QUERY, revalidate: 60 });
+}
+
+export async function getRssPosts(limit = 50): Promise<RssPost[]> {
+  return sanityFetch({
+    query: RSS_POSTS_QUERY,
+    params: { limit },
+    revalidate: 3600,
+  });
+}
+
+export type { Author };

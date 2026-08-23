@@ -1,21 +1,28 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 export const post = defineType({
   name: "post",
   title: "Post",
   type: "document",
   groups: [
-    { name: "content", title: "Content" },
-    { name: "seo", title: "SEO & sharing" },
+    { name: "content", title: "Content", default: true },
+    { name: "organization", title: "Organization" },
+    { name: "seo", title: "SEO" },
+    { name: "advanced", title: "Advanced" },
     { name: "publishing", title: "Publishing" },
   ],
   fields: [
+    // ------------------------------------------------------------------
+    // Content
+    // ------------------------------------------------------------------
     defineField({
       name: "title",
       title: "Title",
       type: "string",
       group: "content",
-      description: "The headline of the article.",
+      description: "The headline of the article. Shown as the H1 on the page.",
       validation: (rule) => [
         rule.required().error("A title is required"),
         rule.max(100).warning("Keep titles under 100 characters"),
@@ -26,9 +33,18 @@ export const post = defineType({
       title: "Slug",
       type: "slug",
       group: "content",
-      description: "The URL path of the article, for example what-is-iptv.",
+      description:
+        "The URL path of the article, for example what-is-iptv. Becomes /blog/your-slug.",
       options: { source: "title", maxLength: 96 },
-      validation: (rule) => rule.required().error("A slug is required"),
+      validation: (rule) => [
+        rule.required().error("A slug is required"),
+        rule.custom((value) => {
+          if (!value?.current) return true;
+          return SLUG_PATTERN.test(value.current)
+            ? true
+            : "Use lowercase words separated by hyphens, with no spaces or special characters";
+        }),
+      ],
     }),
     defineField({
       name: "excerpt",
@@ -36,10 +52,12 @@ export const post = defineType({
       type: "text",
       group: "content",
       rows: 3,
-      description: "A short summary shown on cards and in search results.",
+      description:
+        "A short summary shown on cards and used as the meta description fallback.",
       validation: (rule) => [
         rule.required().error("An excerpt is required"),
-        rule.max(160).warning("Keep the excerpt under 160 characters"),
+        rule.max(160).warning("Keep the excerpt between 140-160 characters for search results"),
+        rule.min(50).warning("Short excerpts get truncated in search results. Aim for at least 50 characters"),
       ],
     }),
     defineField({
@@ -54,7 +72,8 @@ export const post = defineType({
           name: "alt",
           type: "string",
           title: "Alternative text",
-          description: "Describes the image for screen readers and search engines.",
+          description:
+            "Describes the image for screen readers and search engines. Mention the topic naturally.",
           validation: (rule) => rule.required().error("Alternative text is required"),
         }),
         defineField({
@@ -71,7 +90,8 @@ export const post = defineType({
       title: "Body",
       type: "array",
       group: "content",
-      description: "The main article content.",
+      description:
+        "The main article content. Use Heading 2 and Heading 3 for sections - they build the table of contents automatically.",
       of: [
         defineArrayMember({
           type: "block",
@@ -102,7 +122,7 @@ export const post = defineType({
                     type: "string",
                     title: "URL",
                     description:
-                      "A full URL (https://...) or an internal path starting with /.",
+                      "Link to other blog articles or category pages with /blog/... paths to build internal links. Use full URLs only for external sites.",
                     validation: (rule) =>
                       rule.custom((value) => {
                         if (!value) return "A URL is required";
@@ -133,6 +153,7 @@ export const post = defineType({
               name: "alt",
               type: "string",
               title: "Alternative text",
+              validation: (rule) => rule.required().error("Alternative text is required"),
             }),
             defineField({
               name: "caption",
@@ -168,32 +189,188 @@ export const post = defineType({
         }),
       ],
     }),
+
+    // ------------------------------------------------------------------
+    // Organization
+    // ------------------------------------------------------------------
     defineField({
       name: "categories",
       title: "Categories",
       type: "array",
-      group: "content",
+      group: "organization",
+      description:
+        "Primary category first - it is shown on cards and drives related articles.",
       of: [defineArrayMember({ type: "reference", to: [{ type: "category" }] })],
       validation: (rule) =>
         rule.required().min(1).error("Add at least one category"),
     }),
     defineField({
+      name: "tags",
+      title: "Tags",
+      type: "array",
+      group: "organization",
+      of: [{ type: "string" }],
+      options: { layout: "tags" },
+      description:
+        "Free-form topics, for example firestick, smart-tv or buffering. Used for related content and long-tail discovery.",
+    }),
+    defineField({
       name: "author",
       title: "Author",
       type: "reference",
-      group: "content",
+      group: "organization",
       to: [{ type: "author" }],
       validation: (rule) => rule.required().error("An author is required"),
+    }),
+
+    // ------------------------------------------------------------------
+    // SEO
+    // ------------------------------------------------------------------
+    defineField({
+      name: "seoTitle",
+      title: "SEO title",
+      type: "string",
+      group: "seo",
+      description: "Shown in search results. Leave empty to use the article title.",
+      validation: (rule) => [
+        rule.max(60).warning("Aim for 50-60 characters so the title is not truncated"),
+        rule.min(30).warning("Very short titles waste search result space. Aim for 30+ characters"),
+      ],
+    }),
+    defineField({
+      name: "seoDescription",
+      title: "SEO description",
+      type: "text",
+      group: "seo",
+      rows: 3,
+      description: "Shown in search results. Leave empty to use the excerpt.",
+      validation: (rule) =>
+        rule.max(160).warning("Aim for 140-160 characters so the description is not truncated"),
+    }),
+    defineField({
+      name: "focusKeyword",
+      title: "Focus keyword",
+      type: "string",
+      group: "seo",
+      description:
+        "The main search phrase this article targets, for example what is iptv. Ideally appears in the title, slug and first paragraph.",
+    }),
+    defineField({
+      name: "secondaryKeywords",
+      title: "Secondary keywords",
+      type: "array",
+      group: "seo",
+      of: [{ type: "string" }],
+      options: { layout: "tags" },
+      description: "Long-tail variations that support the focus keyword.",
+    }),
+    defineField({
+      name: "seoKeywords",
+      title: "Legacy keywords",
+      type: "array",
+      group: "seo",
+      of: [{ type: "string" }],
+      options: { layout: "tags" },
+      description: "Kept for older articles. Prefer focus/secondary keywords above.",
+      hidden: ({ document }) => Boolean(document?.focusKeyword),
+    }),
+    defineField({
+      name: "canonicalUrl",
+      title: "Canonical URL",
+      type: "url",
+      group: "seo",
+      description:
+        "Only needed when this article is syndicated from another source. Leave empty to use the article's own URL.",
+    }),
+    defineField({
+      name: "noIndex",
+      title: "Hide from search engines",
+      type: "boolean",
+      group: "seo",
+      initialValue: false,
+      description:
+        "Adds noindex to the page. Use sparingly - published posts are normally indexed.",
+    }),
+    defineField({
+      name: "openGraphImage",
+      title: "Open Graph image",
+      type: "image",
+      group: "seo",
+      description:
+        "Image used when the article is shared on social media. Leave empty to use the featured image.",
+      options: { hotspot: true },
+      fields: [
+        defineField({
+          name: "alt",
+          type: "string",
+          title: "Alternative text",
+        }),
+      ],
+    }),
+
+    // ------------------------------------------------------------------
+    // Advanced
+    // ------------------------------------------------------------------
+    defineField({
+      name: "faq",
+      title: "FAQ",
+      type: "array",
+      group: "advanced",
+      description:
+        "Questions shown in a section at the end of the article. Great for capturing People Also Ask results.",
+      of: [
+        defineArrayMember({
+          type: "object",
+          name: "faqItem",
+          title: "Question",
+          fields: [
+            defineField({
+              name: "question",
+              type: "string",
+              title: "Question",
+              validation: (rule) => rule.required().error("A question is required"),
+            }),
+            defineField({
+              name: "answer",
+              type: "text",
+              title: "Answer",
+              rows: 4,
+              description: "One clear paragraph. Search engines show this directly in results.",
+              validation: (rule) => [
+                rule.required().error("An answer is required"),
+                rule.max(500).warning("Keep answers focused - around 300 characters works best"),
+              ],
+            }),
+          ],
+          preview: {
+            select: { title: "question", subtitle: "answer" },
+          },
+        }),
+      ],
+      validation: (rule) => rule.max(10).warning("More than 8 questions rarely helps readers"),
+    }),
+    defineField({
+      name: "relatedPosts",
+      title: "Related posts",
+      type: "array",
+      group: "advanced",
+      of: [defineArrayMember({ type: "reference", to: [{ type: "post" }] })],
+      description:
+        "Hand-picked articles to link to. Leave empty to let the site pick related posts from categories and tags automatically.",
     }),
     defineField({
       name: "readingTime",
       title: "Estimated reading time",
       type: "number",
-      group: "content",
+      group: "advanced",
       description: "In minutes. Leave empty to auto-calculate from the body.",
       validation: (rule) =>
         rule.integer().min(1).max(60).error("Enter a whole number of minutes"),
     }),
+
+    // ------------------------------------------------------------------
+    // Publishing
+    // ------------------------------------------------------------------
     defineField({
       name: "status",
       title: "Status",
@@ -225,7 +402,8 @@ export const post = defineType({
       title: "Updated date",
       type: "datetime",
       group: "publishing",
-      description: "When the article was last revised. Leave empty if never updated.",
+      description:
+        "When the article was last revised. Refresh this when you make meaningful updates - it feeds the dateModified structured data.",
       validation: (rule) =>
         rule.custom((value, context) => {
           if (!value) return true;
@@ -235,48 +413,6 @@ export const post = defineType({
           }
           return true;
         }),
-    }),
-    defineField({
-      name: "seoTitle",
-      title: "SEO title",
-      type: "string",
-      group: "seo",
-      description: "Shown in search results. Leave empty to use the article title.",
-      validation: (rule) => rule.max(60).warning("Aim for 60 characters or fewer"),
-    }),
-    defineField({
-      name: "seoDescription",
-      title: "SEO description",
-      type: "text",
-      group: "seo",
-      rows: 3,
-      description: "Shown in search results. Leave empty to use the excerpt.",
-      validation: (rule) => rule.max(160).warning("Aim for 160 characters or fewer"),
-    }),
-    defineField({
-      name: "seoKeywords",
-      title: "SEO keywords",
-      type: "array",
-      group: "seo",
-      of: [{ type: "string" }],
-      options: { layout: "tags" },
-      description: "A few keywords that describe the article.",
-    }),
-    defineField({
-      name: "openGraphImage",
-      title: "Open Graph image",
-      type: "image",
-      group: "seo",
-      description:
-        "Image used when the article is shared on social media. Leave empty to use the featured image.",
-      options: { hotspot: true },
-      fields: [
-        defineField({
-          name: "alt",
-          type: "string",
-          title: "Alternative text",
-        }),
-      ],
     }),
   ],
   preview: {
