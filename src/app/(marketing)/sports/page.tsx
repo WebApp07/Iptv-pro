@@ -6,7 +6,11 @@ import { SportCategories } from "@/components/sports/sport-categories";
 import { PopularLeagues } from "@/components/sports/popular-leagues";
 import { ConversionSection } from "@/components/sports/conversion-section";
 import { RelatedSportsArticles } from "@/components/sports/related-articles";
-import { getUpcomingEventsWithStatus, isSportsDataConfigured } from "@/lib/sports";
+import {
+  getLiveEventsWithStatus,
+  getUpcomingEventsWithStatus,
+  isSportsDataConfigured,
+} from "@/lib/sports";
 import { breadcrumbJsonLd, sportsEventsJsonLd } from "@/lib/sports/schema";
 import { siteConfig, siteUrl } from "@/config/site";
 
@@ -48,7 +52,16 @@ async function eventsJsonLd(): Promise<object | null> {
 }
 
 export default async function SportsPage() {
-  const jsonLdEvents = await eventsJsonLd();
+  // Pre-warm the section queries in parallel: the sections below then hit
+  // React cache() instead of issuing their own lookups, removing any
+  // render-time waterfall between them.
+  const jsonLdEventsPromise = eventsJsonLd();
+  await Promise.all([
+    jsonLdEventsPromise,
+    isSportsDataConfigured() ? getLiveEventsWithStatus({ limit: 9 }) : null,
+    isSportsDataConfigured() ? getUpcomingEventsWithStatus({ limit: 12 }) : null,
+  ].filter(Boolean));
+  const jsonLdEvents = await jsonLdEventsPromise;
 
   return (
     <>

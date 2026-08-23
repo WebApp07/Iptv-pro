@@ -322,9 +322,13 @@ export default async function MatchPage({ params }: MatchPageProps) {
   }
 
   const { category, match } = loaded;
-  const [statsResult, h2hResult] = await Promise.all([
+  // All supplementary lookups fire in one parallel batch - no waterfall
+  // between stats, H2H and the two form lookups.
+  const [statsResult, h2hResult, homeRecent, awayRecent] = await Promise.all([
     getEventStatisticsWithStatus(match.id),
     getHeadToHeadWithStatus(match.homeTeam.id, match.awayTeam.id, 5),
+    getTeamRecentEventsWithStatus(match.homeTeam.id, 5),
+    getTeamRecentEventsWithStatus(match.awayTeam.id, 5),
   ]);
   const hasStats =
     statsResult.status === "ok" &&
@@ -335,14 +339,14 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const hasH2H = h2hResult.status === "ok" && h2hResult.data.length > 0;
 
   // Recent form per team - only rendered for teams with finished matches.
-  const forms = await Promise.all([
-    getTeamRecentEventsWithStatus(match.homeTeam.id, 5).then((r) =>
-      r.status === "ok" ? deriveTeamForm(match.homeTeam.id, r.data) : null
-    ),
-    getTeamRecentEventsWithStatus(match.awayTeam.id, 5).then((r) =>
-      r.status === "ok" ? deriveTeamForm(match.awayTeam.id, r.data) : null
-    ),
-  ]);
+  const forms = [
+    homeRecent.status === "ok"
+      ? deriveTeamForm(match.homeTeam.id, homeRecent.data)
+      : null,
+    awayRecent.status === "ok"
+      ? deriveTeamForm(match.awayTeam.id, awayRecent.data)
+      : null,
+  ];
 
   const anchorSections: Array<[string, string]> = [];
   if (hasStats) anchorSections.push(["#team-stats", "Team Stats"]);

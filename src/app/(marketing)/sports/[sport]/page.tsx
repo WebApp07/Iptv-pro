@@ -11,7 +11,12 @@ import {
   SportCategories,
   resolveSportCategory,
 } from "@/components/sports/sport-categories";
-import { getUpcomingEventsWithStatus, isSportsDataConfigured } from "@/lib/sports";
+import {
+  getLiveEventsWithStatus,
+  getUpcomingEventsWithStatus,
+  isSportSupported,
+  isSportsDataConfigured,
+} from "@/lib/sports";
 import { breadcrumbJsonLd, sportsEventsJsonLd } from "@/lib/sports/schema";
 import { siteConfig, siteUrl } from "@/config/site";
 
@@ -64,10 +69,18 @@ export default async function SportPage({ params }: SportPageProps) {
   if (!category || category.slug === "all") notFound();
 
   const label = category.label;
+
+  // Warm every section query in one parallel batch - sections below then
+  // resolve from React cache() with zero sequential lookups. Unsupported
+  // sports are detected first so no upstream calls are made for them.
   let eventsJsonLd: object | null = null;
-  if (isSportsDataConfigured()) {
+  const supported = await isSportSupported(category.slug);
+  if (isSportsDataConfigured() && supported) {
     try {
-      const upcoming = await getUpcomingEventsWithStatus({ limit: 12 });
+      const [upcoming] = await Promise.all([
+        getUpcomingEventsWithStatus({ limit: 12 }),
+        getLiveEventsWithStatus({ limit: 9 }),
+      ]);
       if (upcoming.status === "ok") {
         eventsJsonLd = sportsEventsJsonLd(upcoming.data);
       }
