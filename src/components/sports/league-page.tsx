@@ -6,6 +6,7 @@ import { ConversionSection } from "@/components/sports/conversion-section";
 import { RelatedSportsArticles } from "@/components/sports/related-articles";
 import {
   getLiveEventsWithStatus,
+  getUpcomingEventsWithStatus,
   isSportsDataConfigured,
 } from "@/lib/sports";
 import type { League } from "@/lib/sports";
@@ -31,15 +32,28 @@ export async function LeaguePageContent({
   const covered = league !== null;
   const leaguePath = `/sports/${category.slug}/${entry.slug}`;
 
-  let liveCount = 0;
+  // Warm both section queries in a single parallel batch; the LiveEvents
+  // section later resolves the live query from React cache() - no second
+  // upstream call. The live count for this header comes from that same
+  // cached result.
+  let liveResult: Awaited<ReturnType<typeof getLiveEventsWithStatus>> | null =
+    null;
   if (league && isSportsDataConfigured()) {
     try {
-      const live = await getLiveEventsWithStatus({ leagueId: league.id });
-      if (live.status === "ok") liveCount = live.data.length;
+      const [live] = await Promise.all([
+        getLiveEventsWithStatus({ leagueId: league.id }),
+        getUpcomingEventsWithStatus({
+          leagueId: league.id,
+          limit: 12,
+        }),
+      ]);
+      liveResult = live;
     } catch {
-      // Section will render its own state.
+      // Sections render their own states on failure.
     }
   }
+  const liveCount =
+    liveResult && liveResult.status === "ok" ? liveResult.data.length : 0;
 
   return (
     <>
