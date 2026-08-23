@@ -78,34 +78,35 @@ function TeamRow({
   bold?: boolean;
 }) {
   return (
-    <span className="flex min-w-0 flex-1 items-center gap-3">
+    <span className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
       {team.logoUrl ? (
         <Image
           src={team.logoUrl}
           alt=""
           width={24}
           height={24}
-          className="h-6 w-6 shrink-0 object-contain"
+          className="h-5 w-5 shrink-0 object-contain sm:h-6 sm:w-6"
         />
       ) : (
         <span
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary/60 text-[10px] font-bold text-muted"
+          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-secondary/60 text-[10px] font-bold text-muted sm:h-6 sm:w-6"
           aria-hidden="true"
         >
           {team.name.slice(0, 2).toUpperCase()}
         </span>
       )}
       <span
+        title={team.name}
         className={
           bold
-            ? "truncate text-sm font-semibold text-foreground"
-            : "truncate text-sm text-muted"
+            ? "min-w-0 flex-1 truncate text-sm font-semibold text-foreground"
+            : "min-w-0 flex-1 truncate text-sm text-muted"
         }
       >
         {team.name}
       </span>
       {score != null ? (
-        <span className="ml-auto pr-1 text-sm font-bold tabular-nums text-foreground">
+        <span className="ml-auto text-sm font-bold tabular-nums text-foreground">
           {score}
         </span>
       ) : null}
@@ -125,7 +126,7 @@ export function MatchCard({
   const showScore = match.status !== "scheduled" && hasScore;
 
   return (
-    <article className="flex flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-[#ffd166]/40 sm:p-5">
+    <article className="flex flex-col rounded-xl border border-border bg-card p-3.5 transition-colors hover:border-[#ffd166]/40 sm:p-5">
       <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
         {match.leagueName ? (
           <span className="truncate text-xs font-medium uppercase tracking-[0.14em] text-muted">
@@ -137,7 +138,7 @@ export function MatchCard({
         <StatusPill match={match} />
       </div>
 
-      <div className="mt-4 flex-1 space-y-3">
+      <div className="mt-3.5 flex-1 space-y-3 sm:mt-4">
         <TeamRow
           team={match.homeTeam}
           score={showScore ? match.score?.home : undefined}
@@ -157,7 +158,7 @@ export function MatchCard({
       </div>
 
       {(match.venue?.name || details) && (
-        <div className="mt-4 border-t border-border pt-3">
+        <div className="mt-3.5 border-t border-border pt-3 sm:mt-4">
           {match.venue?.name ? (
             <p className="truncate text-xs text-muted">
               {match.venue.name}
@@ -197,7 +198,7 @@ export function SportsNotice({
 /** Responsive grid of match cards, shared by every sports surface. */
 export function MatchGrid({ matches }: { matches: Match[] }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
       {matches.map((match) => (
         <MatchCard key={match.id} match={match} />
       ))}
@@ -214,7 +215,7 @@ export function MatchGridWithDetails({
   renderDetails?: (match: Match) => ReactNode;
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
       {matches.map((match) => (
         <MatchCard
           key={match.id}

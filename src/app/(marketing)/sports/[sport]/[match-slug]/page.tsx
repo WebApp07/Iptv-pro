@@ -132,93 +132,161 @@ function ScoreboardHeader({ match }: { match: Match }) {
     match.score &&
     (match.score.home != null || match.score.away != null);
 
+  // Shared pieces --------------------------------------------------------
+
+  const statusBadge =
+    match.status === "live" ? (
+      <Badge
+        variant="outline"
+        className="border-[#ffd166]/40 bg-[#ffd166]/10 text-[#ffd166]"
+      >
+        Live
+        {match.score?.minute != null ? ` · ${match.score.minute}′` : ""}
+        {match.score?.period ? ` (${match.score.period})` : ""}
+      </Badge>
+    ) : (
+      <span className="text-xs font-medium capitalize text-muted">
+        {match.status}
+      </span>
+    );
+
+  const crest = (team: Match["homeTeam"], sizeClass: string) =>
+    team.logoUrl ? (
+      <Image
+        src={team.logoUrl}
+        alt=""
+        width={56}
+        height={56}
+        className={cn("shrink-0 object-contain", sizeClass)}
+      />
+    ) : (
+      <span
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-full bg-secondary/60 font-display text-xs font-bold text-muted",
+          sizeClass
+        )}
+        aria-hidden="true"
+      >
+        {team.name.slice(0, 3).toUpperCase()}
+      </span>
+    );
+
+  // Mobile (<sm): stacked team rows, centered score below. ----------------
+
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="rounded-2xl border border-border bg-card p-4 sm:p-8">
+      <div className="flex items-center justify-between gap-2 sm:hidden">
         {match.leagueName ? (
-          <span className="text-xs font-medium uppercase tracking-[0.14em] text-muted">
+          <span className="truncate text-xs font-medium uppercase tracking-[0.14em] text-muted">
             {match.leagueName}
-            {match.round ? ` · ${match.round}` : ""}
           </span>
         ) : (
           <span />
         )}
-        {match.status === "live" ? (
-          <Badge
-            variant="outline"
-            className="border-[#ffd166]/40 bg-[#ffd166]/10 text-[#ffd166]"
-          >
-            Live
-            {match.score?.minute != null ? ` · ${match.score.minute}′` : ""}
-            {match.score?.period ? ` (${match.score.period})` : ""}
-          </Badge>
-        ) : (
-          <span className="text-xs font-medium capitalize text-muted">
-            {match.status}
-          </span>
-        )}
+        {statusBadge}
       </div>
 
-      <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-4 sm:gap-8">
-        {[match.homeTeam, match.awayTeam].map((team, index) => (
-          <div
-            key={team.id}
-            className={cn(
-              "flex min-w-0 items-center gap-3",
-              index === 1 && "flex-row-reverse text-right"
-            )}
-          >
-            {team.logoUrl ? (
-              <Image
-                src={team.logoUrl}
-                alt=""
-                width={56}
-                height={56}
-                className="h-10 w-10 shrink-0 object-contain sm:h-14 sm:w-14"
-              />
-            ) : (
-              <span
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/60 font-display text-xs font-bold text-muted sm:h-14 sm:w-14"
-                aria-hidden="true"
-              >
-                {team.name.slice(0, 3).toUpperCase()}
-              </span>
-            )}
-            <div className="min-w-0">
-              <p className="truncate font-display text-base font-bold sm:text-xl">
+      <div className="mt-4 space-y-4 sm:hidden">
+        {([match.homeTeam, match.awayTeam] as const).map((team) => {
+          const teamScore =
+            showScore && team.id === match.homeTeam.id
+              ? match.score?.home
+              : showScore && team.id === match.awayTeam.id
+                ? match.score?.away
+                : null;
+          return (
+            <div key={team.id} className="flex items-center gap-3">
+              {crest(team, "h-9 w-9")}
+              <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                <span className="mr-1.5 text-[10px] uppercase tracking-[0.14em] text-muted">
+                  {team.id === match.homeTeam.id ? "Home" : "Away"}
+                </span>
                 {team.name}
-              </p>
-              <p className="text-xs uppercase tracking-[0.14em] text-muted">
-                {index === 0 ? "Home" : "Away"}
-              </p>
+              </span>
+              {showScore ? (
+                <span className="font-display text-lg font-bold tabular-nums">
+                  {teamScore ?? "–"}
+                </span>
+              ) : null}
             </div>
-          </div>
-        ))}
+          );
+        })}
+        {!showScore && match.startTime ? (
+          <p className="text-center font-display text-lg font-bold tabular-nums">
+            <LocalDateTime iso={match.startTime} mode="time" />
+          </p>
+        ) : null}
+      </div>
 
-        <div className="text-center">
-          {showScore ? (
-            <p className="font-display text-3xl font-bold tabular-nums sm:text-5xl">
-              {match.score?.home ?? 0}
-              <span className="mx-1 text-muted">–</span>
-              {match.score?.away ?? 0}
-            </p>
+      {/* Tablet/desktop: home | center | away. -------------------------------- */}
+
+      <div className="hidden sm:block">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {match.leagueName ? (
+            <span className="text-xs font-medium uppercase tracking-[0.14em] text-muted">
+              {match.leagueName}
+              {match.round ? ` · ${match.round}` : ""}
+            </span>
           ) : (
-            <>
-              <p className="font-display text-xl font-bold tabular-nums sm:text-2xl">
-                <LocalDateTime iso={match.startTime} mode="time" />
-              </p>
-              <p className="mt-1 hidden text-xs text-muted sm:block">Kick-off</p>
-            </>
+            <span />
           )}
+          {statusBadge}
+        </div>
+
+        <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-8">
+          {[match.homeTeam, match.awayTeam].map((team, index) => (
+            <div
+              key={team.id}
+              className={cn(
+                "flex min-w-0 items-center gap-3",
+                index === 1 && "flex-row-reverse text-right"
+              )}
+            >
+              {crest(team, "h-14 w-14")}
+              <div className="min-w-0">
+                <p className="truncate font-display text-xl font-bold">
+                  {team.name}
+                </p>
+                <p className="text-xs uppercase tracking-[0.14em] text-muted">
+                  {index === 0 ? "Home" : "Away"}
+                </p>
+              </div>
+            </div>
+          ))}
+
+          <div className="text-center">
+            {showScore ? (
+              <p className="font-display text-5xl font-bold tabular-nums">
+                {match.score?.home ?? 0}
+                <span className="mx-1 text-muted">–</span>
+                {match.score?.away ?? 0}
+              </p>
+            ) : (
+              <>
+                <p className="font-display text-2xl font-bold tabular-nums">
+                  <LocalDateTime iso={match.startTime} mode="time" />
+                </p>
+                <p className="mt-1 text-xs text-muted">Kick-off</p>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 border-t border-border pt-4 text-sm text-muted">
+      {/* Shared meta line: kickoff (localized), venue. */}
+      <div className="mt-4 space-y-1 border-t border-border pt-4 text-sm text-muted sm:mt-6 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-4 sm:space-y-0">
         {match.startTime ? (
-          <LocalDateTime iso={match.startTime} mode="datetime" />
+          <span className="block sm:hidden">
+            <LocalDateTime iso={match.startTime} mode="datetime" />
+          </span>
+        ) : null}
+        {match.startTime ? (
+          <span className="hidden sm:inline">
+            <LocalDateTime iso={match.startTime} mode="datetime" />
+          </span>
         ) : null}
         {match.venue?.name ? (
-          <span>
+          <span className="block">
             {match.venue.name}
             {match.venue.city ? `, ${match.venue.city}` : ""}
           </span>
@@ -359,12 +427,15 @@ export default async function MatchPage({ params }: MatchPageProps) {
           </div>
 
           {anchorSections.length > 0 ? (
-            <nav aria-label="Match sections" className="mt-6 flex flex-wrap gap-2">
+            <nav
+              aria-label="Match sections"
+              className="-mx-4 mt-6 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+            >
               {anchorSections.map(([href, label]) => (
                 <a
                   key={href}
                   href={href}
-                  className="inline-flex items-center rounded-full border border-border px-4 py-1.5 text-sm font-medium text-muted transition-colors hover:border-[#ffd166]/40 hover:text-foreground"
+                  className="inline-flex min-h-[38px] shrink-0 items-center whitespace-nowrap rounded-full border border-border px-4 text-sm font-medium text-muted transition-colors hover:border-[#ffd166]/40 hover:text-foreground"
                 >
                   {label}
                 </a>
@@ -417,9 +488,12 @@ export default async function MatchPage({ params }: MatchPageProps) {
               {h2hResult.data.map((event) => (
                 <li
                   key={event.id}
-                  className="grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-xl border border-border bg-card px-4 py-3"
+                  className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-xl border border-border bg-card px-4 py-3"
                 >
-                  <time dateTime={event.startTime} className="text-xs text-muted">
+                  <time
+                    dateTime={event.startTime}
+                    className="whitespace-nowrap text-xs text-muted"
+                  >
                     {formatDate(event.startTime)}
                   </time>
                   <span className="truncate text-sm font-medium">

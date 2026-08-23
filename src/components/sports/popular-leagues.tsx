@@ -30,12 +30,12 @@ export async function PopularLeagues({
         </span>
       </div>
 
-      <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
         {result.data.map(({ entry, league }) => (
           <li key={`${entry.sport}-${entry.slug}`}>
             <Link
               href={`/sports/${entry.sport}/${entry.slug}`}
-              className="flex h-full flex-col items-center rounded-xl border border-border bg-card p-5 text-center transition-colors hover:border-[#ffd166]/40"
+              className="flex h-full flex-col items-center rounded-xl border border-border bg-card p-4 text-center transition-colors hover:border-[#ffd166]/40 sm:p-5"
             >
               {league.logoUrl ? (
                 <Image
