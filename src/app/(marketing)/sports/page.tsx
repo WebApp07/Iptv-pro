@@ -2,125 +2,53 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { LiveEvents } from "@/components/sports/live-events";
 import { UpcomingEvents } from "@/components/sports/upcoming-events";
-import {
-  SportCategories,
-  isValidSportCategory,
-} from "@/components/sports/sport-categories";
+import { SportCategories } from "@/components/sports/sport-categories";
 import { PopularLeagues } from "@/components/sports/popular-leagues";
 import { ConversionSection } from "@/components/sports/conversion-section";
 import { RelatedSportsArticles } from "@/components/sports/related-articles";
 import { getUpcomingEventsWithStatus, isSportsDataConfigured } from "@/lib/sports";
+import { breadcrumbJsonLd, sportsEventsJsonLd } from "@/lib/sports/schema";
 import { siteConfig, siteUrl } from "@/config/site";
 
 /**
  * Fixture data is time-sensitive: the HTML revalidates every minute while
  * the underlying queries keep finer windows (live 30s, upcoming 5min).
+ *
+ * Legacy ?sport=<slug> URLs are redirected to clean /sports/<slug> routes
+ * by src/proxy.ts before this page renders.
  */
 export const revalidate = 60;
 
-export async function generateMetadata({
-  searchParams,
-}: {
-  searchParams: Promise<{ sport?: string }>;
-}): Promise<Metadata> {
-  const { sport } = await searchParams;
-  const filtered = Boolean(sport && sport !== "all");
-
-  return {
-    title: filtered ? `${sport} schedule` : "Live Sports & Scores",
+export const metadata: Metadata = {
+  title: "Live Sports & Scores",
+  description:
+    "Follow today's biggest games, live scores, upcoming matches and your favorite leagues.",
+  alternates: {
+    canonical: siteUrl("/sports"),
+  },
+  openGraph: {
+    title: `Live Sports & Scores | ${siteConfig.name}`,
     description:
       "Follow today's biggest games, live scores, upcoming matches and your favorite leagues.",
-    // Filtered views are near-duplicates of the hub - crawlable but not indexable.
-    robots: filtered ? { index: false, follow: true } : undefined,
-    alternates: {
-      canonical: siteUrl("/sports"),
-    },
-    openGraph: {
-      title: `Live Sports & Scores | ${siteConfig.name}`,
-      description:
-        "Follow today's biggest games, live scores, upcoming matches and your favorite leagues.",
-      url: siteUrl("/sports"),
-      images: [{ url: siteConfig.ogImage }],
-    },
-  };
-}
+    url: siteUrl("/sports"),
+    images: [{ url: siteConfig.ogImage }],
+  },
+};
 
-function breadcrumbJsonLd() {
-  return {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl("/") },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Sports",
-        item: siteUrl("/sports"),
-      },
-    ],
-  };
-}
-
-/**
- * SportsEvent structured data built strictly from real provider data -
- * only emitted when fixtures were actually returned.
- */
-async function sportsEventsJsonLd() {
+async function eventsJsonLd(): Promise<object | null> {
   if (!isSportsDataConfigured()) return null;
   try {
     const result = await getUpcomingEventsWithStatus({ limit: 12 });
-    if (result.status !== "ok" || result.data.length === 0) return null;
-
-    return {
-      "@context": "https://schema.org",
-      "@type": "ItemList",
-      itemListElement: result.data.map((match, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        item: {
-          "@type": "SportsEvent",
-          name: `${match.homeTeam.name} vs ${match.awayTeam.name}`,
-          startDate: match.startTime || undefined,
-          eventStatus:
-            match.status === "postponed"
-              ? "https://schema.org/EventPostponed"
-              : match.status === "canceled"
-                ? "https://schema.org/EventCancelled"
-                : "https://schema.org/EventScheduled",
-          sport: match.sportId,
-          ...(match.venue?.name
-            ? {
-                location: {
-                  "@type": "Place",
-                  name: match.venue.name,
-                  address: match.venue.city,
-                },
-              }
-            : {}),
-          competitor: [
-            { "@type": "SportsTeam", name: match.homeTeam.name },
-            { "@type": "SportsTeam", name: match.awayTeam.name },
-          ],
-        },
-      })),
-    };
+    if (result.status !== "ok") return null;
+    return sportsEventsJsonLd(result.data);
   } catch {
+    // Structured data is additive - never block rendering on it.
     return null;
   }
 }
 
-export default async function SportsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ sport?: string }>;
-}) {
-  const { sport } = await searchParams;
-  const activeCategory =
-    sport && isValidSportCategory(sport) ? sport : ("all" as const);
-  const activeSport =
-    activeCategory === "all" ? undefined : activeCategory;
-
-  const jsonLdEvents = await sportsEventsJsonLd();
+export default async function SportsPage() {
+  const jsonLdEvents = await eventsJsonLd();
 
   return (
     <>
@@ -151,14 +79,14 @@ export default async function SportsPage({
           </div>
 
           <div className="mt-10">
-            <SportCategories active={activeCategory} />
+            <SportCategories active="all" />
           </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-7xl space-y-16 px-4 pb-16 sm:px-6 lg:px-8">
-        <LiveEvents limit={9} sport={activeSport} />
-        <UpcomingEvents limit={12} sport={activeSport} />
+        <LiveEvents limit={9} />
+        <UpcomingEvents limit={12} />
         <PopularLeagues />
         <ConversionSection />
         <RelatedSportsArticles />
@@ -166,7 +94,14 @@ export default async function SportsPage({
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd()) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbJsonLd([
+              { name: "Home", url: siteUrl("/") },
+              { name: "Sports", url: siteUrl("/sports") },
+            ])
+          ),
+        }}
       />
       {jsonLdEvents ? (
         <script

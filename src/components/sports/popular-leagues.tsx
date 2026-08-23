@@ -1,12 +1,18 @@
 import Image from "next/image";
-import { getPopularLeagues } from "@/lib/sports";
+import { getPopularLeagues, type SportSlug } from "@/lib/sports";
 
 /**
  * Popular leagues resolved from live provider metadata (24h cache).
  * Renders nothing when the provider is unavailable - never placeholders.
  */
-export async function PopularLeagues() {
-  const result = await getPopularLeagues();
+export async function PopularLeagues({
+  sport = "football",
+  title = "Popular leagues",
+}: {
+  sport?: SportSlug;
+  title?: string;
+}) {
+  const result = await getPopularLeagues(sport);
   if (result.status !== "ok" || result.data.length === 0) {
     return null;
   }
@@ -15,7 +21,7 @@ export async function PopularLeagues() {
     <section aria-labelledby="popular-leagues-heading">
       <div className="flex items-end justify-between gap-4">
         <h2 id="popular-leagues-heading" className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-          Popular leagues
+          {title}
         </h2>
         <span className="text-xs uppercase tracking-[0.14em] text-muted">
           Current season

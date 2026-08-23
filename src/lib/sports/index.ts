@@ -170,18 +170,24 @@ const statisticsCore = cache(
  */
 const POPULAR_LEAGUE_IDS = ["39", "140", "135", "78", "61", "2"] as const;
 
-const popularLeaguesCore = cache(async (): Promise<SportsResult<League[]>> =>
-  safeResult(
-    async (provider) => {
-      if (!provider.getLeagueById) return [];
-      const resolved = await Promise.all(
-        POPULAR_LEAGUE_IDS.map((id) => provider.getLeagueById!(id))
-      );
-      // Drop leagues that came back empty so we never render placeholders.
-      return resolved.filter((league): league is League => league !== null);
-    },
-    []
-  )
+const popularLeaguesCore = cache(
+  async (): Promise<SportsResult<League[]>> =>
+    safeResult(
+      async (provider) => {
+        if (!provider.getLeagueById) return [];
+        const resolved = await Promise.all(
+          POPULAR_LEAGUE_IDS.map((id) => provider.getLeagueById!(id))
+        );
+        // Drop leagues that came back empty so we never render placeholders.
+        return resolved.filter((league): league is League => league !== null);
+      },
+      []
+    )
+);
+
+const leaguesForSportCore = cache(
+  async (sport: SportSlug, limit: number): Promise<SportsResult<League[]>> =>
+    safeResult(async (provider) => provider.getLeagues({ sport, limit }), [])
 );
 
 const supportedSportsCore = cache(async (): Promise<SportsResult<Sport[]>> =>
@@ -236,9 +242,24 @@ export async function getEventStatisticsWithStatus(
   return statisticsCore(eventId);
 }
 
-/** Curated popular leagues, resolved from live provider metadata. */
-export async function getPopularLeagues(): Promise<SportsResult<League[]>> {
-  return popularLeaguesCore();
+/**
+ * Curated popular leagues, resolved from live provider metadata.
+ * Football uses a curated id list; other sports fall back to the
+ * provider's league listing and return empty when unsupported.
+ */
+export async function getPopularLeagues(
+  sport: SportSlug = "football"
+): Promise<SportsResult<League[]>> {
+  if (sport === "football") {
+    return popularLeaguesCore();
+  }
+  const result = await leaguesForSportCore(sport, 6);
+  // Only claim popular status for sports the provider actually covers.
+  const supported = await isSportSupported(sport);
+  if (!supported) {
+    return { data: [], status: result.status };
+  }
+  return result;
 }
 
 /**

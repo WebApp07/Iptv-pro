@@ -1,28 +1,57 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Legacy blog URLs used ?category=<slug> filtering. Those moved to clean
- * /blog/category/<slug> URLs - this keeps old links working with a real
- * server-side redirect (no client-side JavaScript involved).
+ * Legacy URL cleanups, handled before rendering so responses are genuine
+ * HTTP 307s (no client-side JavaScript involved).
  *
- * Runs before rendering, so the response is a genuine HTTP 307.
+ * - /blog?category=<slug>   -> /blog/category/<slug>
+ * - /sports?sport=<slug>    -> /sports/<slug>
  */
+const SPORT_SLUGS = new Set([
+  "all",
+  "football",
+  "basketball",
+  "tennis",
+  "hockey",
+  "baseball",
+  "mma",
+]);
+
 export function proxy(request: NextRequest) {
-  const category = request.nextUrl.searchParams.get("category");
-  if (!category) {
-    return NextResponse.next();
+  const { pathname, searchParams } = request.nextUrl;
+
+  if (pathname === "/blog") {
+    const category = searchParams.get("category");
+    if (!category) return NextResponse.next();
+
+    const url = request.nextUrl.clone();
+    url.search = "";
+    if (category !== "all") {
+      url.pathname = `/blog/category/${encodeURIComponent(category)}`;
+    }
+    return NextResponse.redirect(url, 307);
   }
 
-  const url = request.nextUrl.clone();
-  url.search = "";
+  if (pathname === "/sports") {
+    const sport = searchParams.get("sport");
+    if (!sport) return NextResponse.next();
 
-  if (category !== "all") {
-    url.pathname = `/blog/category/${encodeURIComponent(category)}`;
+    const url = request.nextUrl.clone();
+    url.search = "";
+    if (!SPORT_SLUGS.has(sport)) {
+      // Unknown sport values fall back to the clean hub instead of a
+      // redirect to a 404.
+      return NextResponse.redirect(url, 307);
+    }
+    if (sport !== "all") {
+      url.pathname = `/sports/${sport}`;
+    }
+    return NextResponse.redirect(url, 307);
   }
 
-  return NextResponse.redirect(url, 307);
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: "/blog",
+  matcher: ["/blog", "/sports"],
 };

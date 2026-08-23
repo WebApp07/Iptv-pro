@@ -16,6 +16,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: siteUrl("/contact"), lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: siteUrl("/blog"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
     { url: siteUrl("/sports"), lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
+    { url: siteUrl("/sports/football"), lastModified: new Date(), changeFrequency: "hourly", priority: 0.7 },
+    { url: siteUrl("/sports/basketball"), lastModified: new Date(), changeFrequency: "daily", priority: 0.6 },
+    { url: siteUrl("/sports/tennis"), lastModified: new Date(), changeFrequency: "daily", priority: 0.6 },
+    { url: siteUrl("/sports/hockey"), lastModified: new Date(), changeFrequency: "daily", priority: 0.6 },
   ];
 
   let postRoutes: MetadataRoute.Sitemap = [];

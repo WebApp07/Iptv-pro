@@ -18,8 +18,9 @@ export function isValidSportCategory(value: string): value is SportCategorySlug 
 }
 
 /**
- * Category navigation for the hub. Server-rendered links - no client JS.
- * "More" points at the live TV page where additional sports content lives.
+ * Category navigation for the hub. Clean routes per sport - no query params.
+ * Server-rendered links - no client JS. "More" points at the live TV page
+ * where additional sports content lives.
  */
 export function SportCategories({ active }: { active: SportCategorySlug }) {
   return (
@@ -27,7 +28,9 @@ export function SportCategories({ active }: { active: SportCategorySlug }) {
       {SPORT_CATEGORIES.map((category) => {
         const isActive = category.slug === active;
         const href =
-          category.slug === "all" ? "/sports" : `/sports?sport=${category.slug}`;
+          category.slug === "all"
+            ? "/sports"
+            : `/sports/${category.slug}`;
         return (
           <Link
             key={category.slug}
