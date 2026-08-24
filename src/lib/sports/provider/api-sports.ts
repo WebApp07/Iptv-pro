@@ -70,6 +70,15 @@ interface ApiFixture {
   status?: ApiStatus;
   round?: string;
   venue?: { id?: number; name?: string; city?: string } | null;
+}
+
+/**
+ * One item of the /fixtures response array. API-Sports wraps each match:
+ * the fixture fields live under `fixture`, while league/teams/goals/score
+ * are siblings.
+ */
+interface ApiFixtureRow {
+  fixture?: ApiFixture;
   league?: {
     id?: number;
     name?: string;
@@ -144,7 +153,9 @@ export function mapTeam(team: ApiTeam | undefined): Team | null {
   };
 }
 
-function mapBreakdown(score: ApiFixture["score"]): MatchScore["breakdown"] {
+function mapBreakdown(
+  score: ApiFixtureRow["score"]
+): MatchScore["breakdown"] {
   if (!score) return undefined;
   const breakdown: NonNullable<MatchScore["breakdown"]> = {};
   const keys = ["halftime", "fulltime", "extratime", "penalty"] as const;
@@ -159,17 +170,20 @@ function mapBreakdown(score: ApiFixture["score"]): MatchScore["breakdown"] {
   return hasAny ? breakdown : undefined;
 }
 
-export function mapFixture(fixture: ApiFixture): Match | null {
+export function mapFixture(row: ApiFixtureRow): Match | null {
+  // API-Sports nests the fixture fields under `fixture`, with league,
+  // teams, goals and score as siblings on the row.
+  const fixture = row.fixture ?? {};
   const id = fixture.id;
-  const home = mapTeam(fixture.teams?.home);
-  const away = mapTeam(fixture.teams?.away);
+  const home = mapTeam(row.teams?.home);
+  const away = mapTeam(row.teams?.away);
   if (!id || !home || !away) return null;
 
   const statusInfo = mapStatus(fixture.status);
 
-  const goals = fixture.goals ?? {};
+  const goals = row.goals ?? {};
   const hasGoals = goals.home != null || goals.away != null;
-  const breakdown = mapBreakdown(fixture.score);
+  const breakdown = mapBreakdown(row.score);
   const liveMinute =
     statusInfo.status === "live" && typeof fixture.status?.elapsed === "number"
       ? fixture.status.elapsed
@@ -178,11 +192,11 @@ export function mapFixture(fixture: ApiFixture): Match | null {
   return {
     id: String(id),
     sportId: SUPPORTED_SPORT.id,
-    leagueId: fixture.league?.id != null ? String(fixture.league.id) : "",
-    leagueName: fixture.league?.name,
+    leagueId: row.league?.id != null ? String(row.league.id) : "",
+    leagueName: row.league?.name,
     startTime: fixture.date ?? "",
     status: statusInfo.status,
-    round: fixture.round ?? fixture.league?.round,
+    round: fixture.round ?? row.league?.round,
     homeTeam: home,
     awayTeam: away,
     ...(hasGoals || liveMinute !== undefined
@@ -244,6 +258,45 @@ export function mapStatistics(
 /* HTTP plumbing                                                       */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Resolves the base URL and auth headers for the configured gateway.
+ *
+ * Two gateways serve the identical v3 API, so mappers stay unchanged:
+ * - "apisports" (default): direct api-sports.io account key
+ *   (x-apisports-key header)
+ * - "rapidapi": the same product via RapidAPI's marketplace
+ *   (x-rapidapi-key + x-rapidapi-host headers, independent quota pool)
+ */
+function resolveGateway(): {
+  baseUrl: string;
+  headers: Record<string, string>;
+} {
+  const host = (
+    process.env.SPORTS_API_HOST || "https://v3.football.api-sports.io"
+  ).replace(/\/+$/, "");
+  const apiKey = process.env.SPORTS_API_KEY ?? "";
+  if (process.env.SPORTS_DEBUG === "1") {
+    console.log(
+      `[sports:debug] gateway mode ${/rapidapi\.com$/.test(new URL(host).hostname) ? "rapidapi" : "apisports"}, host ${host}, keySet ${Boolean(apiKey)}`
+    );
+  }
+
+  if (
+    process.env.SPORTS_API_AUTH === "rapidapi" ||
+    /rapidapi\.com$/.test(new URL(host).hostname)
+  ) {
+    return {
+      baseUrl: host,
+      headers: {
+        "x-rapidapi-key": apiKey,
+        "x-rapidapi-host": new URL(host).hostname,
+      },
+    };
+  }
+
+  return { baseUrl: host, headers: { "x-apisports-key": apiKey } };
+}
+
 async function request<T>(
   endpoint: string,
   params: Record<string, string | number | undefined>,
@@ -251,7 +304,10 @@ async function request<T>(
   timeoutMs: number,
   revalidate: number
 ): Promise<T[]> {
-  const url = new URL(endpoint, resolveHost());
+  // Manual join so a base URL containing a path prefix (e.g. .../v3 on
+  // RapidAPI) is preserved - `new URL("/x", base)` would drop it.
+  const gateway = resolveGateway();
+  const url = new URL(`${gateway.baseUrl}${endpoint}`);
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined) url.searchParams.set(key, String(value));
   }
@@ -260,7 +316,7 @@ async function request<T>(
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url.toString(), {
-      headers: { "x-apisports-key": apiKey },
+      headers: { ...gateway.headers },
       signal: controller.signal,
       // Data Cache window for this data kind. Next also memoizes identical
       // GET requests within a single render pass, so multiple components
@@ -274,6 +330,11 @@ async function request<T>(
 
     const body = (await res.json()) as ApiSportsEnvelope<T>;
 
+    if (process.env.SPORTS_DEBUG === "1") {
+      console.log(
+        `[sports:debug] ${url.toString()} -> http ${res.status}, results ${body.results ?? "?"}, errors ${JSON.stringify(body.errors ?? [])}`
+      );
+    }
     // API-Sports signals quota/auth problems inside a 200 response.
     if (body.errors && !Array.isArray(body.errors) && Object.keys(body.errors).length > 0) {
       throw new SportsProviderError(
@@ -300,10 +361,7 @@ async function request<T>(
   }
 }
 
-function resolveHost(): string {
-  const raw = process.env.SPORTS_API_HOST || "https://v3.football.api-sports.io";
-  return raw.endsWith("/") ? raw : `${raw}/`;
-}
+
 
 /* ------------------------------------------------------------------ */
 /* Adapter                                                             */
@@ -312,6 +370,13 @@ function resolveHost(): string {
 function currentSeasonYear(now = new Date()): number {
   // European seasons run roughly Aug-Jun; July onwards counts as the new year.
   return now.getUTCMonth() >= 6 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
+}
+
+/** UTC calendar date string for "today + offsetDays". */
+function utcDate(offsetDays = 0): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + offsetDays);
+  return d.toISOString().slice(0, 10);
 }
 
 export function createApiSportsProvider(options?: {
@@ -325,7 +390,7 @@ export function createApiSportsProvider(options?: {
   ): Promise<Match[]> {
     const apiKey = process.env.SPORTS_API_KEY;
     if (!apiKey) return [];
-    const rows = await request<ApiFixture>(
+    const rows = await request<ApiFixtureRow>(
       "/fixtures",
       params,
       apiKey,
@@ -398,26 +463,48 @@ export function createApiSportsProvider(options?: {
     },
 
     async getUpcomingEvents(options) {
+      // Free API-Sports plans cannot use the `next` parameter, so upcoming
+      // fixtures come from scheduled (status=NS) queries instead:
+      // - league-scoped: that league's whole current season, sliced here
+      // - global: today plus the following two days, stopping at `limit`
+      const limit = options?.limit ?? DEFAULT_LIMIT;
+
       if (options?.leagueId) {
-        // League-scoped upcoming fixtures use the league + season endpoint.
-        return fixtures(
+        const events = await fixtures(
           {
             league: options.leagueId,
             season: currentSeasonYear(),
-            next: options.limit ?? DEFAULT_LIMIT,
+            status: "NS",
             ...(options.date ? { date: options.date } : {}),
           },
           SPORTS_CACHE_TTL.upcoming
         );
+        return events.slice(0, limit);
       }
-      const events = await fixtures(
-        {
-          next: options?.limit ?? DEFAULT_LIMIT,
-          ...(options?.date ? { date: options.date } : {}),
-        },
-        SPORTS_CACHE_TTL.upcoming
-      );
-      return events.filter((event) => event.status === "scheduled");
+
+      const collected: Match[] = [];
+      // Free plans may only query dates within roughly yesterday..tomorrow;
+      // a failing date (window drift, plan limits) is skipped so one bad
+      // request never blanks the whole section.
+      for (const offset of [-1, 0, 1]) {
+        if (collected.length >= limit) break;
+        try {
+          collected.push(
+            ...(await fixtures(
+              { date: utcDate(offset), status: "NS" },
+              SPORTS_CACHE_TTL.upcoming
+            ))
+          );
+        } catch (error) {
+          // Skip this date; keep whatever earlier dates produced - but log
+          // why so quota/plan issues are visible in server logs.
+          console.warn(
+            "[sports] upcoming date slice skipped:",
+            error instanceof Error ? error.message : error
+          );
+        }
+      }
+      return collected.slice(0, limit);
     },
 
     async getEventById(id) {
@@ -447,15 +534,13 @@ export function createApiSportsProvider(options?: {
           SPORTS_CACHE_TTL.upcoming
         );
       }
-      // Without a date, ask for the league's next fixtures directly.
-      return fixtures(
-        {
-          league: leagueId,
-          season: currentSeasonYear(),
-          next: options?.limit ?? DEFAULT_LIMIT,
-        },
+      // Without a date, return the league's full scheduled season (free-plan
+      // safe - no `next` parameter) and slice here.
+      const events = await fixtures(
+        { league: leagueId, season: currentSeasonYear(), status: "NS" },
         SPORTS_CACHE_TTL.upcoming
       );
+      return options?.limit ? events.slice(0, options.limit) : events;
     },
 
     async getEventStatistics(eventId) {

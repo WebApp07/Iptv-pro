@@ -45,9 +45,14 @@ export async function generateMetadata({ params }: SportPageProps): Promise<Meta
   const label = category.label;
   const url = siteUrl(`/sports/${category.slug}`);
 
+  // Unsupported sports get a coming-soon page that stays out of the index
+  // until the provider actually covers them.
+  const supported = await isSportSupported(category.slug);
+
   return {
     title: `${label} Schedule & Scores`,
     description: `Live ${label.toLowerCase()} scores, upcoming fixtures and the leagues that matter. Follow every match and discover where to watch.`,
+    robots: supported ? undefined : { index: false, follow: true },
     alternates: { canonical: url },
     openGraph: {
       title: `${label} Schedule & Scores | ${siteConfig.name}`,

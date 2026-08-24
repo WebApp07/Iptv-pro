@@ -30,6 +30,7 @@ import type {
 import { SportsProviderError } from "./errors";
 import type { SportsProvider } from "./provider/types";
 import { createApiSportsProvider } from "./provider/api-sports";
+import { createAllSportsProvider } from "./provider/allsports";
 import {
   LEAGUE_REGISTRY,
   matchesEntryName,
@@ -60,12 +61,22 @@ let cachedProvider: SportsProvider | null = null;
 function getProvider(): SportsProvider {
   if (!cachedProvider) {
     const selected = process.env.SPORTS_PROVIDER || "api-sports";
-    if (selected !== "api-sports") {
-      // Unknown provider names fail loudly in server logs rather than
-      // silently returning wrong data.
-      throw new SportsProviderError(selected, "Unknown SPORTS_PROVIDER value");
+    switch (selected) {
+      case "api-sports":
+        cachedProvider = createApiSportsProvider({
+          timeoutMs: PROVIDER_TIMEOUT_MS,
+        });
+        break;
+      case "allsports":
+        cachedProvider = createAllSportsProvider({
+          timeoutMs: PROVIDER_TIMEOUT_MS,
+        });
+        break;
+      default:
+        // Unknown provider names fail loudly in server logs rather than
+        // silently returning wrong data.
+        throw new SportsProviderError(selected, "Unknown SPORTS_PROVIDER value");
     }
-    cachedProvider = createApiSportsProvider({ timeoutMs: PROVIDER_TIMEOUT_MS });
   }
   return cachedProvider;
 }
@@ -87,7 +98,7 @@ async function safeResult<T>(
   try {
     provider = getProvider();
   } catch (error) {
-    console.error("[sports]", error instanceof Error ? error.message : error);
+    console.warn("[sports]", error instanceof Error ? error.message : error);
     return { data: fallback, status: "not-configured" };
   }
 
@@ -99,8 +110,10 @@ async function safeResult<T>(
     return { data: await operation(provider), status: "ok" };
   } catch (error) {
     if (error instanceof SportsProviderError) {
-      // Expected operational failure: outage, timeout, quota.
-      console.error(`[sports] ${error.message}`);
+      // Expected operational failure: outage, timeout, quota. Logged as a
+      // warning - console.error would raise Next.js's dev error overlay for
+      // a condition the UI already handles gracefully.
+      console.warn(`[sports] ${error.message}`);
       return { data: fallback, status: "unavailable" };
     }
     throw error;
@@ -115,8 +128,8 @@ const liveCore = cache(
   async (
     limit?: number,
     leagueId?: string
-  ): Promise<SportsResult<Match[]>> =>
-    safeResult(
+  ): Promise<SportsResult<Match[]>> => {
+    const result = await safeResult(
       async (provider) => {
         const events = await provider.getLiveEvents(
           limit || leagueId ? { limit, leagueId } : undefined
@@ -124,7 +137,14 @@ const liveCore = cache(
         return limit ? events.slice(0, limit) : events;
       },
       []
-    )
+    );
+    if (process.env.SPORTS_DEBUG === "1") {
+      console.log(
+        `[sports:debug] liveCore -> status ${result.status}, count ${result.data.length}`
+      );
+    }
+    return result;
+  }
 );
 
 const upcomingCore = cache(
@@ -220,9 +240,11 @@ async function resolveRegistryEntry(
   provider: SportsProvider,
   entry: LeagueRegistryEntry
 ): Promise<League | null> {
-  // 1) Shortcut with a known provider id when we have one.
-  if (entry.knownId && provider.getLeagueById) {
-    const byId = await provider.getLeagueById(entry.knownId);
+  // 1) Shortcut with a known provider id when the registry has one for
+  //    this provider.
+  const knownId = entry.knownIds?.[provider.id];
+  if (knownId && provider.getLeagueById) {
+    const byId = await provider.getLeagueById(knownId);
     if (byId) return { ...byId, slug: entry.slug };
   }
   // 2) Fall back to exact name matching over the league listing.
@@ -233,11 +255,6 @@ async function resolveRegistryEntry(
       league.sportId === entry.sport && matchesEntryName(entry, league.name)
   );
   return found ? { ...found, slug: entry.slug } : null;
-}
-
-export interface ResolvedLeague {
-  entry: LeagueRegistryEntry;
-  league: League;
 }
 
 export interface ResolvedLeague {
@@ -377,10 +394,15 @@ export async function getLeagueRoute(
  */
 export async function isSportSupported(sport: SportSlug): Promise<boolean> {
   const result = await supportedSportsCore();
-  return (
+  const supported =
     result.status === "ok" &&
-    result.data.some((s) => s.slug.toLowerCase() === sport.toLowerCase())
-  );
+    result.data.some((s) => s.slug.toLowerCase() === sport.toLowerCase());
+  if (process.env.SPORTS_DEBUG === "1") {
+    console.log(
+      `[sports:debug] isSportSupported(${sport}) -> ${supported} (status ${result.status}, sports ${JSON.stringify(result.data)})`
+    );
+  }
+  return supported;
 }
 
 /* Convenience wrappers matching the original simple signatures. */

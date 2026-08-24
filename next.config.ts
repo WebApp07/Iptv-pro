@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "cdn.sanity.io", pathname: "/images/**" },
       // Team crest images returned by the sports provider (API-Sports).
       { protocol: "https", hostname: "media.api-sports.io", pathname: "/football/**" },
+      // Team/league logos returned by AllSportsAPI.
+      {
+        protocol: "https",
+        hostname: "apiv2.allsportsapi.com",
+        pathname: "/logo/**",
+      },
     ],
   },
 };
