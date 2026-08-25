@@ -6,8 +6,10 @@ export const SPORT_CATEGORIES = [
   { slug: "football", label: "Football" },
   { slug: "basketball", label: "Basketball" },
   { slug: "tennis", label: "Tennis" },
+  { slug: "cricket", label: "Cricket" },
   { slug: "hockey", label: "Hockey" },
   { slug: "baseball", label: "Baseball" },
+  { slug: "american-football", label: "American Football" },
   { slug: "mma", label: "MMA" },
 ] as const;
 

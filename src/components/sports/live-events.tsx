@@ -29,7 +29,11 @@ export async function LiveEvents({
     ? NOT_CONFIGURED
     : !supported
       ? ({ data: [], status: "ok" } as SportsResult<Match[]>)
-      : await getLiveEventsWithStatus({ limit, leagueId });
+      : await getLiveEventsWithStatus({
+          limit,
+          leagueId,
+          ...(sport && sport !== "all" ? { sport } : {}),
+        });
 
   return (
     <section aria-labelledby="live-events-heading">
@@ -59,7 +63,7 @@ export async function LiveEvents({
           sport && sport !== "all" ? (
             <SportsNotice
               title={`${sport.charAt(0).toUpperCase()}${sport.slice(1)} coverage coming soon`}
-              body="We don't have schedules for this sport yet. Football is covered today."
+              body="We don't have live coverage for this sport yet. Check back soon."
             />
           ) : (
             <SportsNotice

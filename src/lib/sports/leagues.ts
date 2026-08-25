@@ -19,6 +19,12 @@ export interface LeagueRegistryEntry {
   sport: SportSlug;
   /** Provider names that identify this competition (normalized compare). */
   nameMatch: string[];
+  /**
+   * Country names (normalized compare) the provider's league must carry for
+   * the entry to resolve. Guards against same-name competitions from other
+   * countries on region-restricted plans (e.g. Ghana's "Premier League").
+   */
+  requireCountry?: string[];
   knownIds?: Record<string, string>;
 }
 
@@ -29,6 +35,9 @@ export const LEAGUE_REGISTRY: LeagueRegistryEntry[] = [
     label: "Premier League",
     sport: "football",
     nameMatch: ["premier league"],
+    // Keeps region-restricted plans from linking same-name competitions
+    // (e.g. Ghana's "Premier League").
+    requireCountry: ["England"],
     knownIds: { "api-sports": "39", allsports: "152" },
   },
   {
@@ -43,6 +52,7 @@ export const LEAGUE_REGISTRY: LeagueRegistryEntry[] = [
     label: "La Liga",
     sport: "football",
     nameMatch: ["la liga", "laliga", "primera"],
+    requireCountry: ["Spain"],
     knownIds: { "api-sports": "140", allsports: "302" },
   },
   {
@@ -50,6 +60,7 @@ export const LEAGUE_REGISTRY: LeagueRegistryEntry[] = [
     label: "Serie A",
     sport: "football",
     nameMatch: ["serie a"],
+    requireCountry: ["Italy"],
     knownIds: { "api-sports": "135", allsports: "207" },
   },
   {
@@ -57,6 +68,7 @@ export const LEAGUE_REGISTRY: LeagueRegistryEntry[] = [
     label: "Bundesliga",
     sport: "football",
     nameMatch: ["bundesliga"],
+    requireCountry: ["Germany"],
     knownIds: { "api-sports": "78", allsports: "175" },
   },
   {
@@ -64,11 +76,17 @@ export const LEAGUE_REGISTRY: LeagueRegistryEntry[] = [
     label: "Ligue 1",
     sport: "football",
     nameMatch: ["ligue 1"],
+    requireCountry: ["France"],
     knownIds: { "api-sports": "61", allsports: "168" },
   },
-  // Basketball - resolved automatically once a basketball product is
-  // configured in the provider adapter; filtered out until then.
-  { slug: "nba", label: "NBA", sport: "basketball", nameMatch: ["nba"] },
+  // Basketball - resolved by name match against whichever provider covers
+  // the sport (TheRundown names the NBA "National Basketball Association").
+  {
+    slug: "nba",
+    label: "NBA",
+    sport: "basketball",
+    nameMatch: ["nba", "national basketball association"],
+  },
   {
     slug: "euroleague",
     label: "EuroLeague",
@@ -82,6 +100,84 @@ export const LEAGUE_REGISTRY: LeagueRegistryEntry[] = [
     label: "ACB",
     sport: "basketball",
     nameMatch: ["acb", "liga endesa"],
+  },
+  // Tennis - grand slam tournaments appear in the tennis product's league
+  // listing.
+  {
+    slug: "wimbledon",
+    label: "Wimbledon",
+    sport: "tennis",
+    nameMatch: ["wimbledon"],
+  },
+  {
+    slug: "us-open",
+    label: "US Open",
+    sport: "tennis",
+    nameMatch: ["us open"],
+  },
+  {
+    slug: "french-open",
+    label: "French Open",
+    sport: "tennis",
+    nameMatch: ["french open", "roland garros"],
+  },
+  {
+    slug: "australian-open",
+    label: "Australian Open",
+    sport: "tennis",
+    nameMatch: ["australian open"],
+  },
+  // Cricket.
+  {
+    slug: "ipl",
+    label: "Indian Premier League",
+    sport: "cricket",
+    nameMatch: ["indian premier league", "ipl"],
+  },
+  {
+    slug: "big-bash",
+    label: "Big Bash League",
+    sport: "cricket",
+    nameMatch: ["big bash league", "bbl"],
+  },
+  {
+    slug: "psl",
+    label: "Pakistan Super League",
+    sport: "cricket",
+    nameMatch: ["pakistan super league", "psl"],
+  },
+  // Hockey.
+  {
+    slug: "nhl",
+    label: "NHL",
+    sport: "hockey",
+    nameMatch: ["nhl", "national hockey league"],
+  },
+  {
+    slug: "khl",
+    label: "KHL",
+    sport: "hockey",
+    nameMatch: ["khl", "kontinental hockey league"],
+  },
+  // Baseball.
+  {
+    slug: "mlb",
+    label: "MLB",
+    sport: "baseball",
+    nameMatch: ["mlb", "major league baseball"],
+  },
+  // American football.
+  {
+    slug: "nfl",
+    label: "NFL",
+    sport: "american-football",
+    nameMatch: ["nfl", "national football league"],
+  },
+  {
+    slug: "ncaa-football",
+    label: "NCAA Football",
+    sport: "american-football",
+    nameMatch: ["ncaa"],
   },
 ];
 

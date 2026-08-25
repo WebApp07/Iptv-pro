@@ -69,7 +69,12 @@ export async function UpcomingEvents({
     ? NOT_CONFIGURED
     : !supported
       ? ({ data: [], status: "ok" } as SportsResult<Match[]>)
-      : await getUpcomingEventsWithStatus({ limit, date, leagueId });
+      : await getUpcomingEventsWithStatus({
+          limit,
+          date,
+          leagueId,
+          ...(sport && sport !== "all" ? { sport } : {}),
+        });
 
   const heading =
     date && result.status === "ok" && result.data.length > 0
@@ -95,10 +100,10 @@ export async function UpcomingEvents({
           />
         ) : result.data.length === 0 ? (
           sport && sport !== "all" ? (
-            <SportsNotice
-              title={`${sport.charAt(0).toUpperCase()}${sport.slice(1)} coverage coming soon`}
-              body="We don't have schedules for this sport yet. Football is covered today."
-            >
+              <SportsNotice
+                title={`${sport.charAt(0).toUpperCase()}${sport.slice(1)} coverage coming soon`}
+                body="We don't have schedules for this sport yet. Check back soon."
+              >
               <Link
                 href="/sports"
                 className="text-sm font-medium text-[#ffd166] transition-colors hover:text-[#f4c255]"

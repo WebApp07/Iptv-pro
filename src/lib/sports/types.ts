@@ -12,6 +12,7 @@ export type SportSlug =
   | "football"
   | "basketball"
   | "tennis"
+  | "cricket"
   | "hockey"
   | "baseball"
   | "american-football"
@@ -129,4 +130,10 @@ export interface EventQueryOptions {
   date?: string;
   /** Restrict results to one provider league id where supported. */
   leagueId?: string;
+  /**
+   * Restrict results to one sport where supported. Multi-sport providers
+   * delegate to that sport's product; single-sport providers return [] for
+   * any other sport.
+   */
+  sport?: SportSlug;
 }

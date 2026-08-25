@@ -26,7 +26,15 @@ import { siteConfig, siteUrl } from "@/config/site";
  * sports render honest coming-soon states.
  */
 
-const PRE_RENDERED_SPORTS = ["football", "basketball", "tennis", "hockey"] as const;
+const PRE_RENDERED_SPORTS = [
+  "football",
+  "basketball",
+  "tennis",
+  "cricket",
+  "hockey",
+  "baseball",
+  "american-football",
+] as const;
 
 export function generateStaticParams() {
   return PRE_RENDERED_SPORTS.map((sport) => ({ sport }));

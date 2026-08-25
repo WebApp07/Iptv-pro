@@ -30,10 +30,13 @@ import type {
 import { SportsProviderError } from "./errors";
 import type { SportsProvider } from "./provider/types";
 import { createApiSportsProvider } from "./provider/api-sports";
-import { createAllSportsProvider } from "./provider/allsports";
+import { createAllSportsMultiProvider } from "./provider/allsports-multi";
+import { createRundownProvider } from "./provider/rundown";
+import { createHybridProvider } from "./provider/hybrid";
 import {
   LEAGUE_REGISTRY,
   matchesEntryName,
+  normalizeLeagueName,
   findRegistryEntry,
   type LeagueRegistryEntry,
 } from "./leagues";
@@ -61,14 +64,17 @@ let cachedProvider: SportsProvider | null = null;
 function getProvider(): SportsProvider {
   if (!cachedProvider) {
     const selected = process.env.SPORTS_PROVIDER || "api-sports";
+    let base: SportsProvider;
     switch (selected) {
       case "api-sports":
-        cachedProvider = createApiSportsProvider({
+        base = createApiSportsProvider({
           timeoutMs: PROVIDER_TIMEOUT_MS,
         });
         break;
       case "allsports":
-        cachedProvider = createAllSportsProvider({
+        // Composite spanning every AllSportsAPI product whose key exists
+        // (football, basketball, tennis, cricket, hockey, baseball, NFL).
+        base = createAllSportsMultiProvider({
           timeoutMs: PROVIDER_TIMEOUT_MS,
         });
         break;
@@ -77,6 +83,13 @@ function getProvider(): SportsProvider {
         // silently returning wrong data.
         throw new SportsProviderError(selected, "Unknown SPORTS_PROVIDER value");
     }
+
+    // Basketball rides on TheRundown (RapidAPI) whenever a key exists,
+    // layered on top of the football provider via a routing composite.
+    const rundown = createRundownProvider({ timeoutMs: PROVIDER_TIMEOUT_MS });
+    cachedProvider = rundown.isConfigured()
+      ? createHybridProvider([base, rundown])
+      : base;
   }
   return cachedProvider;
 }
@@ -127,12 +140,13 @@ async function safeResult<T>(
 const liveCore = cache(
   async (
     limit?: number,
-    leagueId?: string
+    leagueId?: string,
+    sport?: SportSlug
   ): Promise<SportsResult<Match[]>> => {
     const result = await safeResult(
       async (provider) => {
         const events = await provider.getLiveEvents(
-          limit || leagueId ? { limit, leagueId } : undefined
+          limit || leagueId || sport ? { limit, leagueId, sport } : undefined
         );
         return limit ? events.slice(0, limit) : events;
       },
@@ -151,10 +165,11 @@ const upcomingCore = cache(
   async (
     limit?: number,
     date?: string,
-    leagueId?: string
+    leagueId?: string,
+    sport?: SportSlug
   ): Promise<SportsResult<Match[]>> =>
     safeResult(
-      async (provider) => provider.getUpcomingEvents({ limit, date, leagueId }),
+      async (provider) => provider.getUpcomingEvents({ limit, date, leagueId, sport }),
       []
     )
 );
@@ -254,7 +269,20 @@ async function resolveRegistryEntry(
     (league) =>
       league.sportId === entry.sport && matchesEntryName(entry, league.name)
   );
-  return found ? { ...found, slug: entry.slug } : null;
+  if (!found) return null;
+  // Same-name guard: a region-restricted plan may only expose e.g. Ghana's
+  // "Premier League" - such matches must not claim the entry's branding.
+  if (
+    entry.requireCountry &&
+    !entry.requireCountry.some(
+      (country) =>
+        normalizeLeagueName(found.country ?? "") ===
+        normalizeLeagueName(country)
+    )
+  ) {
+    return null;
+  }
+  return { ...found, slug: entry.slug };
 }
 
 export interface ResolvedLeague {
@@ -283,15 +311,15 @@ const supportedSportsCore = cache(async (): Promise<SportsResult<Sport[]>> =>
 /* ------------------------------------------------------------------ */
 
 export async function getLiveEventsWithStatus(
-  options?: Pick<EventQueryOptions, "limit" | "leagueId">
+  options?: Pick<EventQueryOptions, "limit" | "leagueId" | "sport">
 ): Promise<SportsResult<Match[]>> {
-  return liveCore(options?.limit, options?.leagueId);
+  return liveCore(options?.limit, options?.leagueId, options?.sport);
 }
 
 export async function getUpcomingEventsWithStatus(
   options?: EventQueryOptions
 ): Promise<SportsResult<Match[]>> {
-  return upcomingCore(options?.limit, options?.date, options?.leagueId);
+  return upcomingCore(options?.limit, options?.date, options?.leagueId, options?.sport);
 }
 
 export async function getEventByIdWithStatus(

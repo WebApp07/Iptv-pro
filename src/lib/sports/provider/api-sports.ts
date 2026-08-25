@@ -452,6 +452,8 @@ export function createApiSportsProvider(options?: {
     },
 
     async getLiveEvents(options) {
+      // Football-only product: an explicit other-sport query has no answer.
+      if (options?.sport && options.sport !== SUPPORTED_SPORT.slug) return [];
       const events = await fixtures(
         {
           live: "all",
@@ -463,6 +465,8 @@ export function createApiSportsProvider(options?: {
     },
 
     async getUpcomingEvents(options) {
+      // Football-only product: an explicit other-sport query has no answer.
+      if (options?.sport && options.sport !== SUPPORTED_SPORT.slug) return [];
       // Free API-Sports plans cannot use the `next` parameter, so upcoming
       // fixtures come from scheduled (status=NS) queries instead:
       // - league-scoped: that league's whole current season, sliced here
