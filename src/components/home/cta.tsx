@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { FreeTrialButton } from "@/components/free-trial/free-trial-button";
 import { cn } from "@/lib/utils";
 
 export function Cta() {
@@ -31,15 +32,13 @@ export function Cta() {
           >
             See Plans
           </Link>
-          <Link
-            href="/register"
-            className={cn(
-              buttonVariants({ variant: "outline", size: "lg" }),
-              "border-white/20 bg-white/5 text-white backdrop-blur hover:bg-white/10"
-            )}
+          <FreeTrialButton
+            variant="outline"
+            size="lg"
+            className="border-white/20 bg-white/5 text-white backdrop-blur hover:bg-white/10"
           >
             Start Free Trial
-          </Link>
+          </FreeTrialButton>
         </div>
       </div>
     </section>

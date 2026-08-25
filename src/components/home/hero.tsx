@@ -1,6 +1,7 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { FreeTrialButton } from "@/components/free-trial/free-trial-button";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
@@ -76,15 +77,13 @@ export function Hero() {
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
             </Link>
-            <Link
-              href="/register"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "w-full border-white/25 bg-white/10 font-btn font-semibold text-white backdrop-blur transition-colors hover:bg-white/20 sm:w-auto",
-              )}
+            <FreeTrialButton
+              variant="outline"
+              size="lg"
+              className="w-full border-white/25 bg-white/10 font-btn font-semibold text-white backdrop-blur transition-colors hover:bg-white/20 sm:w-auto"
             >
               Free Trial
-            </Link>
+            </FreeTrialButton>
           </div>
 
           <Image

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
-import { Button } from "@/components/ui/button";
 import { NavLinks } from "@/components/layout/nav-links";
+import { FreeTrialButton } from "@/components/free-trial/free-trial-button";
 
 export function Header() {
   return (
@@ -16,9 +16,7 @@ export function Header() {
         <NavLinks links={siteConfig.navLinks} />
 
         <div className="flex items-center gap-3">
-          <Link href="/register">
-            <Button size="sm">Get Started</Button>
-          </Link>
+          <FreeTrialButton size="sm">Free Trial</FreeTrialButton>
         </div>
       </div>
     </header>

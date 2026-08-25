@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { FreeTrialButton } from "@/components/free-trial/free-trial-button";
 
 const steps = [
   {
@@ -67,15 +65,12 @@ export function GetStarted() {
         </div>
 
         <div className="mt-14 flex justify-center">
-          <Link
-            href="/free-trial"
-            className={cn(
-              buttonVariants({ size: "lg" }),
-              "bg-[#ffd166] text-black shadow-[0_12px_48px_-12px] shadow-[#ffd166]/60 transition-colors hover:bg-[#f4c255]"
-            )}
+          <FreeTrialButton
+            size="lg"
+            className="bg-[#ffd166] text-black shadow-[0_12px_48px_-12px] shadow-[#ffd166]/60 transition-colors hover:bg-[#f4c255]"
           >
             Start Your Free Trial
-          </Link>
+          </FreeTrialButton>
         </div>
       </div>
     </section>
