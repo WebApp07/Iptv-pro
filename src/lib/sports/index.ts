@@ -32,6 +32,7 @@ import type { SportsProvider } from "./provider/types";
 import { createApiSportsProvider } from "./provider/api-sports";
 import { createAllSportsMultiProvider } from "./provider/allsports-multi";
 import { createRundownProvider } from "./provider/rundown";
+import { createTennisProvider } from "./provider/tennis";
 import { createHybridProvider } from "./provider/hybrid";
 import {
   LEAGUE_REGISTRY,
@@ -84,12 +85,12 @@ function getProvider(): SportsProvider {
         throw new SportsProviderError(selected, "Unknown SPORTS_PROVIDER value");
     }
 
-    // Basketball rides on TheRundown (RapidAPI) whenever a key exists,
-    // layered on top of the football provider via a routing composite.
+    // Per-sport extras ride on top of the football provider via a routing
+    // composite: TheRundown (basketball) and Live Tennis API (tennis).
     const rundown = createRundownProvider({ timeoutMs: PROVIDER_TIMEOUT_MS });
-    cachedProvider = rundown.isConfigured()
-      ? createHybridProvider([base, rundown])
-      : base;
+    const tennis = createTennisProvider({ timeoutMs: PROVIDER_TIMEOUT_MS });
+    const extras = [rundown, tennis].filter((provider) => provider.isConfigured());
+    cachedProvider = extras.length ? createHybridProvider([base, ...extras]) : base;
   }
   return cachedProvider;
 }
