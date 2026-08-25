@@ -29,6 +29,15 @@ export async function MoviesHomeSections() {
   return (
     <section className="relative space-y-16 py-24">
       <div className="mx-auto max-w-7xl space-y-16 px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <h2 className="font-display mx-auto max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
+            Discover Your Next Favorite
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-muted">
+            From trending movies to top-rated series, find something worth
+            watching.
+          </p>
+        </div>
         <TitlesShelf label="Trending Movies" result={trending} max={5} />
         <TitlesShelf label="Popular Movies" result={popular} max={5} />
         <TitlesShelf label="Popular Series" result={series} max={5} />
