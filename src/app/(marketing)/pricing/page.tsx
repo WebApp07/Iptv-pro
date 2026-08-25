@@ -1,19 +1,13 @@
 import type { Metadata } from "next";
+import { Pricing } from "@/components/home/pricing";
 
 export const metadata: Metadata = {
-  title: "Pricing",
-  description: "Choose the plan that fits your viewing habits.",
+  title: "Pricing | IPTV Pro Plans",
+  description:
+    "Flexible IPTV plans for every viewer - 1 or 2 devices, from 1 to 12 months. Full channel lineup in HD/4K, no contracts, cancel anytime.",
+  alternates: { canonical: "/pricing" },
 };
 
 export default function PricingPage() {
-  return (
-    <section className="mx-auto flex max-w-7xl flex-1 flex-col items-center justify-center px-4 py-32 text-center sm:px-6 lg:px-8">
-      <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">
-        Pricing
-      </h1>
-      <p className="mt-4 text-lg text-muted">
-        Flexible plans for every viewer. Cancel anytime.
-      </p>
-    </section>
-  );
+  return <Pricing />;
 }

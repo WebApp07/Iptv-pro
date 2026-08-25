@@ -178,7 +178,7 @@ export function Pricing() {
                 </ul>
 
                 <Link
-                  href="/pricing"
+                  href="/register"
                   className={cn(
                     buttonVariants({
                       variant: plan.featured ? "default" : "outline",
