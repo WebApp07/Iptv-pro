@@ -25,6 +25,11 @@ export interface LeagueRegistryEntry {
    * countries on region-restricted plans (e.g. Ghana's "Premier League").
    */
   requireCountry?: string[];
+  /**
+   * Substring candidates (normalized contains-check) for providers whose
+   * names carry volatile suffixes - e.g. "Indian Premier League 2026".
+   */
+  nameIncludes?: string[];
   knownIds?: Record<string, string>;
 }
 
@@ -127,24 +132,28 @@ export const LEAGUE_REGISTRY: LeagueRegistryEntry[] = [
     sport: "tennis",
     nameMatch: ["australian open"],
   },
-  // Cricket.
+  // Cricket - series names carry season suffixes ("... 2026"), so these
+  // resolve by substring match against the CricAPI series catalogue.
   {
     slug: "ipl",
     label: "Indian Premier League",
     sport: "cricket",
     nameMatch: ["indian premier league", "ipl"],
+    nameIncludes: ["indian premier league"],
   },
   {
     slug: "big-bash",
     label: "Big Bash League",
     sport: "cricket",
     nameMatch: ["big bash league", "bbl"],
+    nameIncludes: ["big bash"],
   },
   {
     slug: "psl",
     label: "Pakistan Super League",
     sport: "cricket",
     nameMatch: ["pakistan super league", "psl"],
+    nameIncludes: ["pakistan super league"],
   },
   // Hockey.
   {

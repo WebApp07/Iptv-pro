@@ -33,6 +33,7 @@ import { createApiSportsProvider } from "./provider/api-sports";
 import { createAllSportsMultiProvider } from "./provider/allsports-multi";
 import { createRundownProvider } from "./provider/rundown";
 import { createTennisProvider } from "./provider/tennis";
+import { createCricketProvider } from "./provider/cricket";
 import { createHybridProvider } from "./provider/hybrid";
 import {
   LEAGUE_REGISTRY,
@@ -86,10 +87,14 @@ function getProvider(): SportsProvider {
     }
 
     // Per-sport extras ride on top of the football provider via a routing
-    // composite: TheRundown (basketball) and Live Tennis API (tennis).
+    // composite: TheRundown (basketball), Live Tennis API (tennis) and
+    // CricketData/CricAPI (cricket).
     const rundown = createRundownProvider({ timeoutMs: PROVIDER_TIMEOUT_MS });
     const tennis = createTennisProvider({ timeoutMs: PROVIDER_TIMEOUT_MS });
-    const extras = [rundown, tennis].filter((provider) => provider.isConfigured());
+    const cricket = createCricketProvider({ timeoutMs: PROVIDER_TIMEOUT_MS });
+    const extras = [rundown, tennis, cricket].filter((provider) =>
+      provider.isConfigured()
+    );
     cachedProvider = extras.length ? createHybridProvider([base, ...extras]) : base;
   }
   return cachedProvider;
@@ -263,13 +268,18 @@ async function resolveRegistryEntry(
     const byId = await provider.getLeagueById(knownId);
     if (byId) return { ...byId, slug: entry.slug };
   }
-  // 2) Fall back to exact name matching over the league listing.
+  // 2) Fall back to exact name matching over the league listing, plus
+  //    substring candidates for providers whose names carry volatile
+  //    suffixes ("Indian Premier League 2026").
   const all = await allLeaguesCore();
   if (all.status !== "ok") return null;
-  const found = all.data.find(
-    (league) =>
-      league.sportId === entry.sport && matchesEntryName(entry, league.name)
-  );
+  const includes = entry.nameIncludes?.map(normalizeLeagueName);
+  const found = all.data.find((league) => {
+    if (league.sportId !== entry.sport) return false;
+    if (matchesEntryName(entry, league.name)) return true;
+    const normalized = normalizeLeagueName(league.name);
+    return includes?.some((needle) => normalized.includes(needle)) ?? false;
+  });
   if (!found) return null;
   // Same-name guard: a region-restricted plan may only expose e.g. Ghana's
   // "Premier League" - such matches must not claim the entry's branding.
