@@ -16,11 +16,6 @@ export function Header() {
         <NavLinks links={siteConfig.navLinks} />
 
         <div className="flex items-center gap-3">
-          <Link href="/login">
-            <Button variant="ghost" size="sm">
-              Sign in
-            </Button>
-          </Link>
           <Link href="/register">
             <Button size="sm">Get Started</Button>
           </Link>
