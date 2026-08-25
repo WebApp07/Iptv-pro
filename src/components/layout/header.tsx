@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { NavLinks } from "@/components/layout/nav-links";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { FreeTrialButton } from "@/components/free-trial/free-trial-button";
 
 export function Header() {
@@ -17,6 +18,7 @@ export function Header() {
 
         <div className="flex items-center gap-3">
           <FreeTrialButton size="sm">Free Trial</FreeTrialButton>
+          <MobileNav links={siteConfig.navLinks} />
         </div>
       </div>
     </header>
