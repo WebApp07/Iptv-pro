@@ -12,9 +12,7 @@ const SPORT_SLUGS = new Set([
   "football",
   "basketball",
   "tennis",
-  "hockey",
-  "baseball",
-  "mma",
+  "cricket",
 ]);
 
 export function proxy(request: NextRequest) {
