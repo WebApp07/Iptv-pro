@@ -9,6 +9,12 @@ export const siteConfig = {
     github: "https://github.com/iptvpro",
   },
   whatsappUrl: "https://wa.me/+100000000",
+  // PLACEHOLDER - replace with your real support email before publishing.
+  supportEmail: "support@example.com",
+  // PLACEHOLDER - add the payment methods you actually accept at checkout
+  // (e.g. "PayPal", "Visa", "Mastercard"). The footer payments strip stays
+  // hidden while this array is empty.
+  paymentMethods: [] as readonly string[],
   navLinks: [
     { title: "Home", href: "/" },
     { title: "Movies", href: "/movies" },
