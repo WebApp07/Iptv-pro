@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
         hostname: "apiv2.allsportsapi.com",
         pathname: "/logo/**",
       },
+      // Movie/series posters served by OMDb (IMDb data).
+      {
+        protocol: "https",
+        hostname: "m.media-amazon.com",
+        pathname: "/images/**",
+      },
     ],
   },
 };

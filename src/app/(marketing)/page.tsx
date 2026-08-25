@@ -1,5 +1,6 @@
 import { Hero } from "@/components/home/hero";
 import { PopularChannels } from "@/components/popular-channels";
+import { MoviesHomeSections } from "@/components/movies/home-sections";
 import { Streaming } from "@/components/home/streaming";
 import { Sports } from "@/components/home/sports";
 import { LiveSportsToday } from "@/components/home/live-sports-today";
@@ -22,6 +23,7 @@ export default function HomePage() {
     <>
       <Hero />
       <PopularChannels />
+      <MoviesHomeSections />
       <Streaming />
       <Sports />
       <LiveSportsToday />
