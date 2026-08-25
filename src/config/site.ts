@@ -11,7 +11,6 @@ export const siteConfig = {
   whatsappUrl: "https://wa.me/+100000000",
   navLinks: [
     { title: "Home", href: "/" },
-    { title: "Live TV", href: "/live-tv" },
     { title: "Movies", href: "/movies" },
     { title: "Series", href: "/series" },
     { title: "Sports", href: "/sports" },
