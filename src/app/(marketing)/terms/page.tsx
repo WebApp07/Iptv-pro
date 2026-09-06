@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import {
   LegalPage,
   LegalSection,
-  Placeholder,
   LegalContactLine,
 } from "@/components/legal-page";
 import { siteConfig } from "@/config/site";
@@ -17,107 +16,107 @@ export default function TermsPage() {
     <LegalPage
       title="Terms of Service"
       description="These terms govern your access to and use of our service. By subscribing, you agree to them."
-      updated="[DATE]"
+      updated="6 September 2026"
     >
       <LegalSection title="1. About these terms">
         <p>
-          These Terms of Service (&ldquo;Terms&rdquo;) form an agreement
-          between you and IPTV Pro (the
-          &ldquo;Service&rdquo;). They apply to every plan, free trial and
-          feature we offer through this website.
+          These Terms of Service (&ldquo;Terms&rdquo;) are an agreement
+          between you and IPTV Pro (&ldquo;the Service&rdquo;,
+          &ldquo;we&rdquo;, &ldquo;us&rdquo;), the operator of this website.
+          They cover every plan, free trial and feature we offer through this
+          site.
         </p>
       </LegalSection>
 
       <LegalSection title="2. The service">
         <p>
-          We provide subscription-based access to live television channels,
-          movies and series on the supported devices listed on this website.
-          Channel and catalogue availability can vary by region, device and
+          We provide subscription access to live television channels, movies
+          and series on the supported devices listed on this website. Which
+          channels and titles are available can vary by region, device and
           plan, and may change over time.
         </p>
       </LegalSection>
 
       <LegalSection title="3. Free trial">
         <p>
-          A 24-hour free trial may be offered so you can evaluate the service
-          before purchasing. Trials are limited to one per customer unless we
-          state otherwise, and we may withdraw or modify the trial at any
-          time.
+          When we offer a 24-hour free trial, it lets you try the service
+          before you pay. Trials are limited to one per customer unless we
+          say otherwise, and we may change or withdraw them at any time.
         </p>
       </LegalSection>
 
       <LegalSection title="4. Accounts and fair use">
         <ul className="list-disc space-y-2 pl-5">
           <li>
-            Your subscription covers the number of simultaneous streams shown
+            Your subscription allows the number of simultaneous streams shown
             at checkout.
           </li>
           <li>
-            Do not share, resell or redistribute your credentials or the
+            Do not share, resell or redistribute your login details or the
             stream.
           </li>
           <li>
-            Do not use the service for any unlawful purpose or in a way that
-            harms the service, our suppliers or other customers.
+            Do not use the service for anything unlawful, or in a way that
+            harms us, our suppliers or other customers.
           </li>
         </ul>
         <p>
-          We may suspend or terminate accounts that breach these rules, with
-          or without notice where required.
+          We may suspend or end accounts that break these rules.
         </p>
       </LegalSection>
 
       <LegalSection title="5. Billing and renewal">
         <p>
-          Prices, durations and what is included are shown on the pricing page
-          before you pay. Payments are handled by our payment provider
-          (<Placeholder>payment provider</Placeholder>) and{" "}
-          <Placeholder>billing / renewal terms</Placeholder> apply as
-          presented at checkout. Unless stated otherwise, plans do not
-          auto-renew and there are no contracts.
+          Prices, terms and what is included are shown on the pricing page
+          before you pay. Payments are handled securely by third-party
+          providers - PayPal, and card payments via Visa and Mastercard.
+        </p>
+        <p>
+          Plans run for the term you choose (1, 3, 6 or 12 months) and do not
+          auto-renew. There are no contracts, so you can stop whenever you
+          like.
         </p>
       </LegalSection>
 
       <LegalSection title="6. Service availability">
         <p>
-          We aim for high uptime but do not guarantee uninterrupted or
-          error-free access. Quality depends on factors outside our control,
-          including your internet connection and third-party networks.
-          Specific channels, events or titles are not guaranteed.
+          We aim to keep the service running, but we do not guarantee it will
+          be uninterrupted or error-free. Quality depends on things outside
+          our control, such as your internet connection and third-party
+          networks. Specific channels, events or titles are not guaranteed.
         </p>
       </LegalSection>
 
       <LegalSection title="7. Intellectual property">
         <p>
           The website, its design and its content are protected by
-          intellectual property laws. You are responsible for ensuring your
-          use of any content accessed through the service complies with the
-          copyright laws of your country.
+          intellectual property laws. You are responsible for making sure how
+          you use the content on the service follows the copyright laws of
+          your country.
         </p>
       </LegalSection>
 
       <LegalSection title="8. Limitation of liability">
         <p>
-          To the maximum extent permitted by law, the Service is provided
+          To the fullest extent allowed by law, the Service is provided
           &ldquo;as is&rdquo; and &ldquo;as available&rdquo;, and we are not
-          liable for indirect, incidental or consequential damages arising
-          from your use of, or inability to use, the service.
+          liable for indirect, incidental or consequential damages from using
+          the service, or from being unable to use it.
         </p>
       </LegalSection>
 
       <LegalSection title="9. Changes to these terms">
         <p>
-          We may update these Terms from time to time. The date above shows
-          when they were last revised. Continued use of the service after a
-          change means you accept the revised Terms.
+          We may update these Terms as the service evolves. The date at the
+          top shows the latest version. If you keep using the service after a
+          change, you accept the revised Terms.
         </p>
       </LegalSection>
 
       <LegalSection title="10. Governing law">
         <p>
-          These Terms are governed by the laws of{" "}
-          <Placeholder>jurisdiction</Placeholder>, without regard to conflict
-          of law principles.
+          These Terms are governed by applicable law. If any part of these
+          Terms is found unenforceable, the rest still applies.
         </p>
       </LegalSection>
 
