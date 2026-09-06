@@ -210,7 +210,6 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                {/* PLACEHOLDER address - replace supportEmail in src/config/site.ts */}
                 <a
                   href={`mailto:${siteConfig.supportEmail}`}
                   className="rounded text-sm text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -276,14 +275,13 @@ export function Footer() {
           </div>
         )}
 
-        {/* PLACEHOLDER - review this disclaimer with the real business details before publishing */}
         <p className="mx-auto mt-10 max-w-4xl text-center text-xs leading-relaxed text-white/50">
-          {siteConfig.name} is an IPTV subscription service operated by
-          [Company Legal Name]. Channel, movie and series availability may
-          vary by region and plan and is subject to change. All product
-          names, logos, brands and devices mentioned on this website are the
-          property of their respective owners and do not imply endorsement
-          or partnership. For copyright enquiries, see our{" "}
+          {siteConfig.name} is an IPTV subscription service operated by IPTV
+          Pro. Channel, movie and series availability may vary by region and
+          plan and is subject to change. All product names, logos, brands and
+          devices mentioned on this website are the property of their
+          respective owners and do not imply endorsement or partnership. For
+          copyright enquiries, see our{" "}
           <Link
             href="/dmca"
             className="font-semibold text-[#ffd166]/90 transition-colors hover:text-[#ffd166]"
@@ -306,25 +304,6 @@ export function Footer() {
             <FooterLink href="/refund">Refund Policy</FooterLink>
             <FooterLink href="/contact">Contact</FooterLink>
           </nav>
-
-          <div className="flex items-center gap-4">
-            <a
-              href={siteConfig.links.twitter}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              Twitter
-            </a>
-            <a
-              href={siteConfig.links.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              GitHub
-            </a>
-          </div>
         </div>
       </div>
     </footer>

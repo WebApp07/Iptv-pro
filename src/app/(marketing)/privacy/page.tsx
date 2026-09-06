@@ -21,7 +21,7 @@ export default function PrivacyPage() {
     >
       <LegalSection title="1. Who we are">
         <p>
-          This website is operated by <Placeholder>Company Legal Name</Placeholder>{" "}
+          This website is operated by IPTV Pro{" "}
           (&ldquo;we&rdquo;, &ldquo;us&rdquo;). We are the controller of the
           personal data described in this policy.
         </p>

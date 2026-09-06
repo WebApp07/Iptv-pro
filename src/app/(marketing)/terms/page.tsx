@@ -22,7 +22,7 @@ export default function TermsPage() {
       <LegalSection title="1. About these terms">
         <p>
           These Terms of Service (&ldquo;Terms&rdquo;) form an agreement
-          between you and <Placeholder>Company Legal Name</Placeholder> (the
+          between you and IPTV Pro (the
           &ldquo;Service&rdquo;). They apply to every plan, free trial and
           feature we offer through this website.
         </p>
