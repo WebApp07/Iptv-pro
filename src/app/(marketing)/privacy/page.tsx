@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import {
   LegalPage,
   LegalSection,
-  Placeholder,
   LegalContactLine,
 } from "@/components/legal-page";
 
@@ -17,92 +16,195 @@ export default function PrivacyPage() {
     <LegalPage
       title="Privacy Policy"
       description="This policy explains what personal data we collect and how we use it."
-      updated="[DATE]"
+      updated="6 September 2026"
     >
-      <LegalSection title="1. Who we are">
+      <LegalSection title="1. Interpretation and Definitions">
         <p>
-          This website is operated by IPTV Pro{" "}
-          (&ldquo;we&rdquo;, &ldquo;us&rdquo;). We are the controller of the
-          personal data described in this policy.
+          This privacy policy explains what information we collect when you
+          use our live streaming service, why we collect it, and the choices
+          you have. By using the service, you agree to the collection and use
+          of your information as set out below.
         </p>
-      </LegalSection>
-
-      <LegalSection title="2. Information we collect">
+        <p>
+          Words that start with a capital letter in this policy have a
+          specific meaning, listed here.
+        </p>
         <ul className="list-disc space-y-2 pl-5">
           <li>
-            <strong className="text-foreground">Contact details</strong> you
-            give us, such as your name and email address when requesting a
-            trial or contacting support.
+            <strong className="text-foreground">Account</strong> means a
+            unique account created for you to access the service, or parts of
+            it.
           </li>
           <li>
-            <strong className="text-foreground">WhatsApp number</strong> if
-            you choose to receive support or credentials over WhatsApp.
+            <strong className="text-foreground">Affiliate</strong> means a
+            company that controls us, is controlled by us, or is under common
+            control with us. Control means owning 50% or more of a
+            company&apos;s shares or voting rights.
           </li>
           <li>
-            <strong className="text-foreground">Account data</strong> needed
-            to activate your subscription, such as plan and device count.
+            <strong className="text-foreground">Company</strong> (referred
+            to as &ldquo;the Company&rdquo;, &ldquo;We&rdquo;,
+            &ldquo;Us&rdquo; or &ldquo;Our&rdquo; in this policy) means IPTV
+            Pro, the operator of this website.
           </li>
           <li>
-            <strong className="text-foreground">Technical data</strong> such
-            as IP address and device type, collected for security and to keep
-            the service working.{" "}
-            <Placeholder>list analytics tools if any are used</Placeholder>
+            <strong className="text-foreground">Cookies</strong> are small
+            files a website places on your computer, phone or other device.
+            They store details such as your browsing history on that site.
+          </li>
+          <li>
+            <strong className="text-foreground">Device</strong> means any
+            device that can access the service, such as a computer, phone or
+            tablet.
+          </li>
+          <li>
+            <strong className="text-foreground">Personal Data</strong> is any
+            information that relates to an identified or identifiable person.
+          </li>
+          <li>
+            <strong className="text-foreground">Service</strong> refers to
+            the Website.
+          </li>
+          <li>
+            <strong className="text-foreground">Service Provider</strong>{" "}
+            means any person or company that processes data on our behalf,
+            such as partners that help us host, run or improve the service.
+          </li>
+          <li>
+            <strong className="text-foreground">Usage Data</strong> means data
+            collected automatically when the service is used, such as how long
+            a page visit lasted.
+          </li>
+          <li>
+            <strong className="text-foreground">Website</strong> refers to
+            IPTV Pro&apos;s website, at https://tv96.uk.
+          </li>
+          <li>
+            <strong className="text-foreground">You</strong> means the person
+            using the service, or the company on whose behalf they use it,
+            whichever applies.
+          </li>
+        </ul>
+      </LegalSection>
+
+      <LegalSection title="2. Collection and Use of Your Personal Data">
+        <h3 className="font-semibold text-foreground">
+          Data we collect
+        </h3>
+        <p>
+          When you request a free trial, order a plan or contact support, we
+          may ask for details we can use to reach you. This can include:
+        </p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li>Email address</li>
+          <li>First name and last name</li>
+          <li>
+            Phone number, including your WhatsApp number if you want support
+            or login details over WhatsApp
           </li>
         </ul>
         <p>We do not collect payment card numbers on this website.</p>
-      </LegalSection>
 
-      <LegalSection title="3. How we use your information">
+        <h3 className="mt-6 font-semibold text-foreground">
+          How we use your data
+        </h3>
         <ul className="list-disc space-y-2 pl-5">
-          <li>To create, activate and manage your subscription.</li>
-          <li>To deliver login details and provide support.</li>
-          <li>To respond to questions sent by email or WhatsApp.</li>
-          <li>To detect abuse and keep the service secure.</li>
+          <li>
+            <strong className="text-foreground">To run the service:</strong>{" "}
+            keep it working, monitor how it&apos;s used and fix problems.
+          </li>
+          <li>
+            <strong className="text-foreground">To manage your
+            subscription:</strong> set it up, keep it active and manage its
+            features.
+          </li>
+          <li>
+            <strong className="text-foreground">To deal with orders:</strong>{" "}
+            process purchases and carry out any agreement you make with us.
+          </li>
+          <li>
+            <strong className="text-foreground">To stay in touch:</strong>{" "}
+            send updates, security notices and messages about your
+            subscription by email, phone or WhatsApp.
+          </li>
+          <li>
+            <strong className="text-foreground">To send offers:</strong> tell
+            you about products and deals similar to ones you&apos;ve already
+            bought or asked about. You can stop this whenever you like.
+          </li>
+          <li>
+            <strong className="text-foreground">To answer your
+            requests:</strong> respond to what you send us.
+          </li>
+          <li>
+            <strong className="text-foreground">If we are sold:</strong> in a
+            merger, sale, reorganisation or transfer of our assets, personal
+            data we hold about users may be among the assets transferred.
+          </li>
+          <li>
+            <strong className="text-foreground">Other uses:</strong> analysing
+            how the service is used, spotting trends, measuring promotions and
+            improving the product.
+          </li>
         </ul>
       </LegalSection>
 
-      <LegalSection title="4. Sharing">
+      <LegalSection title="3. Deleting Your Data">
         <p>
-          We do not sell your personal data. We share it only with providers
-          who help us operate the service (<Placeholder>e.g. hosting, payment
-          processor, messaging provider</Placeholder>), each under their own
-          confidentiality obligations, or where the law requires it.
+          You have the right to delete your personal data, or to ask us to
+          delete it for you. Email or message us at any time to access,
+          correct or delete the information you&apos;ve given us.
         </p>
       </LegalSection>
 
-      <LegalSection title="5. Retention">
+      <LegalSection title="4. Security">
         <p>
-          We keep your data only as long as needed to provide the service,{" "}
-          <Placeholder>retention period</Placeholder> for accounting records,
-          or until you ask us to delete it, whichever applies.
+          Keeping your data safe matters to us. That said, no transmission
+          over the internet or method of storage is completely secure. We use
+          commercially reasonable measures to protect your data, but we
+          cannot guarantee absolute security.
         </p>
       </LegalSection>
 
-      <LegalSection title="6. Your rights">
+      <LegalSection title="5. Sharing">
         <p>
-          Depending on where you live (<Placeholder>applicable law, e.g.
-          GDPR</Placeholder>) you may have the right to access, correct,
-          export or delete your personal data, and to object to certain
-          processing. Contact us to exercise these rights.
+          We do not sell your personal data. We share it only with partners
+          who help us run the service, each bound by confidentiality
+          obligations, or when the law requires it.
         </p>
       </LegalSection>
 
-      <LegalSection title="7. Security">
+      <LegalSection title="6. Links to Other Websites">
         <p>
-          We apply reasonable technical and organisational measures to
-          protect your data. No method of transmission is completely secure,
-          so please never send passwords by email or chat.
+          Our service may link to sites we don&apos;t run. If you click a
+          third-party link, you&apos;ll be on their site, so it&apos;s worth
+          checking their privacy policy. We have no control over, and accept
+          no responsibility for, the content, policies or practices of
+          third-party sites or services.
         </p>
       </LegalSection>
 
-      <LegalSection title="8. Changes">
+      <LegalSection title="7. Changes to This Policy">
         <p>
-          We may update this policy as the service evolves. The date at the
-          top shows the latest revision.
+          We may update this policy as the service changes. We&apos;ll post
+          the revised version on this page and, where we can reach you, let
+          you know before it takes effect. The date at the top shows the
+          latest revision.
         </p>
       </LegalSection>
 
-      <LegalSection title="9. Contact">
+      <LegalSection title="8. Your Rights">
+        <p>
+          Where you live affects what rights you have. In many places you may
+          be able to access, correct, export or delete your personal data,
+          and to object to certain processing. Contact us and we&apos;ll help.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="9. Contact Us">
+        <p>
+          If you have any questions about this privacy policy, get in touch:
+        </p>
         <LegalContactLine />
       </LegalSection>
     </LegalPage>
