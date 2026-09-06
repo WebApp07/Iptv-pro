@@ -197,9 +197,6 @@ export function Footer() {
                 <FooterLink href="/contact">Contact Us</FooterLink>
               </li>
               <li>
-                <FooterLink href="/#faq">Support Center</FooterLink>
-              </li>
-              <li>
                 <a
                   href={siteConfig.whatsappUrl}
                   target="_blank"
