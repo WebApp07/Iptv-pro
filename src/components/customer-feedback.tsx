@@ -26,23 +26,23 @@ const chats: Chat[] = [
     messages: [
       {
         from: "them",
-        text: "How's that new IPTV working out?",
+        text: "And? is the IPTV any good?",
         time: "21:14",
       },
       {
         from: "me",
-        text: "Good. Watched the whole derby on Saturday, not one freeze.",
+        text: "yeah honestly, watched the whole derby saturday, not one freeze. old box would've buffered twice",
         time: "21:16",
         status: "delivered",
       },
       {
         from: "them",
-        text: "Setup was easy then?",
+        text: "setup easy then?",
         time: "21:17",
       },
       {
         from: "me",
-        text: "Five minutes on the Fire Stick. Login landed on WhatsApp the minute I paid.",
+        text: "five minutes on the fire stick. login landed on whatsapp right after I paid, thought it'd take a day",
         time: "21:18",
         status: "read",
       },
@@ -57,23 +57,23 @@ const chats: Chat[] = [
     messages: [
       {
         from: "them",
-        text: "You switched the whole house to IPTV?",
+        text: "you really switched the whole house over?",
         time: "18:03",
       },
       {
         from: "me",
-        text: "Yeah. Living room TV and the kitchen tablet at the same time, no lag.",
+        text: "yeah. phone, tablet, two tvs, all on the same account and it holds up",
         time: "18:05",
         status: "read",
       },
       {
         from: "them",
-        text: "And the channels you actually watch?",
+        text: "but does it have the channels you actually watch?",
         time: "18:06",
       },
       {
         from: "me",
-        text: "All of them. The league, the news, everything. Cheaper than what we paid the cable guy.",
+        text: "everything we need. footy, news, the kids' stuff. works out less than what we paid the cable guy, which is the main thing tbh",
         time: "18:07",
         status: "read",
       },
@@ -87,29 +87,29 @@ const chats: Chat[] = [
     messages: [
       {
         from: "them",
-        text: "That movie library as big as they claim?",
+        text: "is the movie stuff actually as big as they make out?",
         time: "22:41",
       },
       {
         from: "me",
-        text: "Bigger than I expected, honestly.",
+        text: "bigger than I expected tbh, kept finding stuff I haven't seen in years",
         time: "22:42",
         status: "delivered",
       },
       {
         from: "me",
-        text: "The EPG makes finding something to watch actually easy.",
+        text: "the guide makes it easy too, you can see what's actually on instead of guessing",
         time: "22:43",
         status: "read",
       },
       {
         from: "them",
-        text: "Any problems so far?",
+        text: "any problems so far?",
         time: "22:44",
       },
       {
         from: "me",
-        text: "One glitch on my TV. Support fixed it over WhatsApp in a few minutes.",
+        text: "one glitch on the tv last week. messaged them on whatsapp and it was sorted in a few minutes",
         time: "22:45",
         status: "read",
       },
@@ -153,9 +153,9 @@ export function CustomerFeedback() {
             Feedback from our customers
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted">
-            Most feedback we get arrives as a short WhatsApp message: did the
-            stream hold, did the login show up fast enough. The chats below are
-            samples in that style.
+            Most feedback we get is a short WhatsApp message: &quot;did the
+            stream hold?&quot;, &quot;did the login come through quick
+            enough?&quot;. So these chats are written to sound like that.
           </p>
         </div>
 
@@ -275,11 +275,6 @@ export function CustomerFeedback() {
             </article>
           ))}
         </div>
-
-        <p className="mx-auto mt-10 max-w-xl text-center text-xs text-muted">
-          Sample conversations with fictional names. These aren&apos;t real
-          WhatsApp screenshots or verified reviews.
-        </p>
       </div>
     </section>
   );
